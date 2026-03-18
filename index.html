@@ -70,6 +70,27 @@ footer{position:relative;z-index:1;text-align:center;padding:40px;border-top:1px
 @keyframes mring{to{width:120px!important;height:120px!important;opacity:0;margin:-60px;border-color:rgba(201,168,76,0);}}
 .sound-btn{position:fixed;bottom:24px;right:24px;z-index:200;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.35);border-radius:30px;padding:9px 18px;font-family:'Cinzel',serif;font-size:11px;color:var(--gold);cursor:pointer;letter-spacing:2px;transition:all 0.3s;}
 .sound-btn:hover{background:rgba(201,168,76,0.22);}
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  nav{padding:10px 14px;gap:10px;flex-wrap:wrap;}
+  .nav-logo{font-size:15px;}
+  .nav-quote{display:none;}
+  .hero{padding:48px 18px 30px;}
+  .hero-badge{font-size:9px;letter-spacing:3px;padding:5px 14px;}
+  .hero-stats{gap:24px;margin-top:24px;}
+  .stat-num{font-size:24px;}
+  .stat-label{font-size:9px;letter-spacing:2px;}
+  .grimoire-intro{padding:10px 18px 4px;}
+  .cards-grid{padding:12px 14px 48px!important;gap:14px;}
+  .grimoire-card{padding:20px 16px;}
+  .card-title{font-size:15px;}
+  .card-desc{font-size:13px;}
+  .card-icon{font-size:32px;}
+  .tag{font-size:10px;padding:2px 8px;}
+  .sound-btn{bottom:14px;right:14px;padding:7px 13px;font-size:10px;}
+  footer{padding:24px 18px;}
+}
 </style>
 </head>
 <body>

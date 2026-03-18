@@ -667,6 +667,30 @@
       flex-direction: column;
       gap: 20px;
     }
+
+    /* ── MOBILE ── */
+    @media(max-width:700px){
+      nav{padding:10px 12px;gap:8px;flex-wrap:wrap;}
+      .nav-links{overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;gap:4px;margin-left:0;width:100%;}
+      .nav-links::-webkit-scrollbar{display:none;}
+      .nav-link{font-size:10px;padding:4px 8px;flex-shrink:0;}
+      .page-header{padding:24px 14px 16px;}
+      .page-title{font-size:clamp(22px,6vw,40px)!important;}
+      .main-layout{grid-template-columns:1fr!important;padding:0 10px 40px;}
+      .sidebar{position:static!important;top:auto;display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:4px;padding-bottom:8px;scrollbar-width:none;}
+      .sidebar::-webkit-scrollbar{display:none;}
+      .sidebar-title{display:none;}
+      .algo-btn{flex-shrink:0;width:auto;white-space:nowrap;padding:8px 12px;font-size:11px;margin-bottom:0;}
+      .panel{padding:14px 12px;}
+      .input-row{gap:8px;}
+      .spell-input{font-size:14px;min-width:0;}
+      .spell-input.sm{min-width:0;width:80px;}
+      .btn{padding:8px 12px;font-size:10px;letter-spacing:1px;}
+      input[type=range]{width:70px;}
+      .canvas-wrap{height:240px!important;}
+      .graph-canvas{height:240px!important;}
+      .info-grid{grid-template-columns:repeat(2,1fr)!important;}
+    }
   </style>
 </head>
 
