@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP Divination — AlgoGrimoire</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --void:#05050f;--deep:#09091d;--surface:#0f0f28;--card:#141438;--card2:#1a1a45;
+  --gold:#c9a84c;--gold-bright:#f0c96e;--parchment:#f0e0b8;--text:#d0c4a0;--text-dim:#9a8a6a;
+  --border:#22224a;--green:#10b981;--blue:#3b82f6;--purple:#8b5cf6;--red:#ef4444;--amber:#f59e0b;
+  --pink:#f472b6;--accent:#8b5cf6;
+}
+body{background:var(--void);color:var(--text);font-family:'Crimson Text',serif;min-height:100vh;overflow-x:hidden;}
+canvas.bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(5,5,15,0.92);backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);padding:12px 40px;display:flex;align-items:center;gap:16px;}
+.nav-logo{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);text-decoration:none;}
+.nav-back{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;text-transform:uppercase;transition:color 0.3s;}
+.nav-back:hover{color:var(--purple);}
+.nav-sep{color:var(--border);}
+.nav-current{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--purple);text-transform:uppercase;}
+.nav-links{display:flex;gap:12px;margin-left:auto;}
+.nav-link{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-decoration:none;text-transform:uppercase;padding:5px 12px;border:1px solid transparent;border-radius:20px;transition:all 0.3s;}
+.nav-link:hover{color:var(--gold);border-color:var(--border);}
+
+.page-header{position:relative;z-index:1;text-align:center;padding:48px 40px 32px;}
+.page-badge{display:inline-block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;color:var(--purple);text-transform:uppercase;border:1px solid rgba(139,92,246,0.3);padding:5px 18px;border-radius:30px;background:rgba(139,92,246,0.06);margin-bottom:16px;}
+.page-title{font-family:'Cinzel Decorative',serif;font-size:clamp(28px,5vw,52px);color:var(--gold);text-shadow:0 0 40px rgba(201,168,76,0.4);margin-bottom:8px;}
+.page-sub{font-size:16px;color:var(--text-dim);font-style:italic;}
+.divider{width:180px;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:20px auto;opacity:0.5;}
+
+.main-layout{position:relative;z-index:1;display:grid;grid-template-columns:220px 1fr;gap:24px;max-width:1300px;margin:0 auto;padding:0 32px 60px;}
+@media(max-width:800px){.main-layout{grid-template-columns:1fr;}}
+
+.sidebar{height:fit-content;position:sticky;top:80px;}
+.sidebar-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase;padding:0 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.algo-btn{width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:10px;padding:10px 14px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all 0.3s;margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+.algo-btn:hover{background:rgba(255,255,255,0.04);color:var(--text);border-color:var(--border);}
+.algo-btn.active{background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.3);color:var(--purple);}
+.algo-btn .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+.sim-area{display:flex;flex-direction:column;gap:20px;}
+.algo-section{display:none;}.algo-section.active{display:flex;flex-direction:column;gap:20px;}
+
+.panel{background:linear-gradient(145deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;padding:24px;}
+.panel-title{font-family:'Cinzel',serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.panel-title::before{content:'';width:20px;height:1px;background:var(--gold);opacity:0.5;}
+
+.input-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.input-group{display:flex;flex-direction:column;gap:6px;}
+.input-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.spell-input{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-family:'Crimson Text',serif;font-size:15px;outline:none;transition:border-color 0.3s;min-width:120px;}
+.spell-input:focus{border-color:var(--purple);}
+.spell-input.sm{min-width:70px;width:80px;}
+
+.btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:8px;}
+.btn-cast{background:linear-gradient(135deg,#3b1e8a,var(--purple));color:#fff;box-shadow:0 4px 20px rgba(139,92,246,0.3);}
+.btn-cast:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(139,92,246,0.4);}
+.btn-step{background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--gold);}
+.btn-step:hover{background:rgba(201,168,76,0.2);}
+.btn-reset{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red);}
+.btn-reset:hover{background:rgba(239,68,68,0.2);}
+.speed-wrap{display:flex;align-items:center;gap:6px;font-size:14px;}
+input[type=range]{width:90px;accent-color:var(--purple);cursor:pointer;}
+
+/* DP TABLE */
+.dp-table-wrap{overflow-x:auto;padding:8px 0;}
+.dp-table{border-collapse:separate;border-spacing:3px;font-family:'Cinzel',serif;}
+.dp-table td,.dp-table th{width:46px;height:38px;text-align:center;border-radius:6px;font-size:12px;border:1px solid var(--border);transition:all 0.3s;position:relative;}
+.dp-table th{background:rgba(139,92,246,0.08);color:var(--text-dim);font-size:10px;letter-spacing:1px;}
+.dp-table td{background:var(--surface);color:var(--text);}
+.dp-table td.cur{background:rgba(201,168,76,0.25);border-color:var(--gold);color:var(--gold-bright);box-shadow:0 0 14px rgba(201,168,76,0.4);transform:scale(1.08);}
+.dp-table td.prev{background:rgba(139,92,246,0.15);border-color:var(--purple);color:#c084fc;}
+.dp-table td.done{background:rgba(16,185,129,0.1);border-color:var(--green);color:var(--green);}
+.dp-table td.path{background:rgba(245,158,11,0.2);border-color:var(--amber);color:var(--amber);box-shadow:0 0 10px rgba(245,158,11,0.3);}
+.dp-table td.zero{color:var(--text-dim);}
+
+/* BAR CHART */
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:160px;padding:0 4px;}
+.bar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:28px;}
+.bar{width:100%;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px 4px 0 0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);position:relative;}
+.bar.active{background:rgba(201,168,76,0.6);border-color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,0.4);}
+.bar.lis{background:rgba(16,185,129,0.5);border-color:var(--green);box-shadow:0 0 12px rgba(16,185,129,0.3);}
+.bar.checked{background:rgba(239,68,68,0.3);border-color:var(--red);}
+.bar-val{font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);}
+.bar-idx{font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);}
+.bar-dp-val{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:10px;color:var(--gold);white-space:nowrap;}
+
+/* LCS GRID */
+.lcs-grid{overflow-x:auto;}
+.lcs-table{border-collapse:separate;border-spacing:3px;}
+.lcs-table td,.lcs-table th{width:42px;height:36px;text-align:center;border-radius:6px;font-size:12px;border:1px solid var(--border);font-family:'Cinzel',serif;transition:all 0.3s;}
+.lcs-table th{background:rgba(59,130,246,0.08);color:var(--blue);font-size:11px;}
+.lcs-table td{background:var(--surface);color:var(--text);}
+.lcs-table td.cur{background:rgba(201,168,76,0.25);border-color:var(--gold);color:var(--gold-bright);transform:scale(1.1);box-shadow:0 0 14px rgba(201,168,76,0.4);}
+.lcs-table td.match{background:rgba(16,185,129,0.2);border-color:var(--green);color:var(--green);}
+.lcs-table td.path{background:rgba(245,158,11,0.2);border-color:var(--amber);color:var(--amber);}
+
+/* FIBO */
+.fib-chain{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0;}
+.fib-node{display:flex;align-items:center;gap:6px;}
+.fib-box{width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:2px solid var(--border);background:var(--surface);font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--text);transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+.fib-box.active{border-color:var(--gold);background:rgba(201,168,76,0.15);color:var(--gold-bright);box-shadow:0 0 18px rgba(201,168,76,0.4);transform:translateY(-6px) scale(1.08);}
+.fib-box.done{border-color:var(--purple);background:rgba(139,92,246,0.12);color:#c084fc;}
+.fib-arrow{font-size:16px;color:var(--text-dim);}
+.fib-idx{font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);text-align:center;margin-top:4px;}
+
+/* GRID DP */
+.grid-table{border-collapse:separate;border-spacing:3px;}
+.grid-table td{width:48px;height:48px;text-align:center;border-radius:6px;font-size:13px;font-family:'Cinzel',serif;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all 0.3s;position:relative;cursor:pointer;}
+.grid-table td.wall{background:rgba(239,68,68,0.2);border-color:var(--red);color:var(--red);}
+.grid-table td.cur{background:rgba(201,168,76,0.25);border-color:var(--gold);color:var(--gold-bright);transform:scale(1.1);box-shadow:0 0 14px rgba(201,168,76,0.4);}
+.grid-table td.done{background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.4);color:#c084fc;}
+.grid-table td.path{background:rgba(16,185,129,0.2);border-color:var(--green);color:var(--green);box-shadow:0 0 10px rgba(16,185,129,0.3);}
+.grid-table td.start{background:rgba(59,130,246,0.2);border-color:var(--blue);color:var(--blue);}
+.grid-table td.end{background:rgba(244,114,182,0.2);border-color:var(--pink);color:var(--pink);}
+
+/* LOG */
+.log-box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-height:160px;overflow-y:auto;font-family:'Crimson Text',serif;font-size:14px;}
+.log-entry{padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-dim);}
+.log-entry.highlight{color:var(--gold);}
+.log-entry.found-msg{color:var(--green);}
+.log-entry.warn{color:var(--amber);}
+.log-entry.path-msg{color:#c084fc;}
+
+/* ITEMS */
+.item-list{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+.item-card{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);border-radius:8px;padding:8px 14px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;color:var(--text);}
+.item-card.selected{background:rgba(16,185,129,0.15);border-color:var(--green);color:var(--green);}
+.item-card span{display:block;font-size:9px;color:var(--text-dim);margin-top:2px;}
+
+.badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:3px 10px;border-radius:20px;text-transform:uppercase;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:var(--purple);}
+.badge.time{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25);color:var(--green);}
+.result-box{background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:14px 18px;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;}
+.result-val{font-size:22px;color:var(--purple);font-family:'Cinzel Decorative',serif;margin-top:4px;}
+.desc{font-size:15px;color:var(--text-dim);font-style:italic;line-height:1.6;margin-bottom:16px;}
+
+/* MOBILE */
+@media(max-width:700px){
+  nav{padding:10px 12px;gap:8px;flex-wrap:wrap;}
+  .nav-links{overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;gap:4px;margin-left:0;width:100%;}
+  .nav-links::-webkit-scrollbar{display:none;}
+  .nav-link{font-size:10px;padding:4px 8px;flex-shrink:0;}
+  .page-header{padding:24px 14px 16px;}
+  .page-title{font-size:clamp(22px,6vw,40px)!important;}
+  .main-layout{padding:0 10px 40px!important;gap:12px;}
+  .sidebar{position:static!important;top:auto;display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:4px;padding-bottom:8px;scrollbar-width:none;}
+  .sidebar::-webkit-scrollbar{display:none;}
+  .sidebar-title{display:none;}
+  .algo-btn{flex-shrink:0;width:auto;white-space:nowrap;padding:8px 12px;font-size:11px;margin-bottom:0;}
+  .panel{padding:14px 12px;}
+  .input-row{gap:8px;}
+  .spell-input{font-size:14px;min-width:0;}
+  .spell-input.sm{width:70px;min-width:0;}
+  .btn{padding:8px 12px;font-size:10px;letter-spacing:1px;}
+  .dp-table td,.dp-table th{width:30px;height:28px;font-size:10px;}
+  .bar-chart{height:110px;}
+  .fib-box{width:44px;height:44px;font-size:12px;}
+  .fib-chain{gap:4px;}
+  .fib-arrow{font-size:12px;}
+  .lcs-table td,.lcs-table th{width:34px;height:30px;font-size:10px;}
+  .grid-table td{width:36px;height:36px;font-size:11px;}
+  .bar-wrap{min-width:22px;}
+  input[type=range]{width:70px;}
+  .result-val{font-size:18px;}
+}
+</style>
+</head>
+<body>
+<canvas class="bg" id="bgCanvas"></canvas>
+
+<nav>
+  <a href="index.html" class="nav-logo">⚯͛ AlgoGrimoire</a>
+  <span class="nav-sep">›</span>
+  <a href="index.html" class="nav-back">Chapters</a>
+  <span class="nav-sep">›</span>
+  <span class="nav-current">Chapter III · DP Divination</span>
+  <div class="nav-links">
+    <a href="arrays.html" class="nav-link">Arrays</a>
+    <a href="graphs.html" class="nav-link">Graphs</a>
+    <a href="ds.html" class="nav-link">Structures</a>
+    <a href="math.html" class="nav-link">Math</a>
+    <a href="trees.html" class="nav-link">Trees</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-badge">Chapter III</div>
+  <h1 class="page-title">DP Divination</h1>
+  <p class="page-sub">Foresee all futures. Remember all pasts.</p>
+  <div class="divider"></div>
+</div>
+
+<div class="main-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Spells</div>
+    <button class="algo-btn active" onclick="showAlgo('fib',this)"><span class="dot"></span>Fibonacci DP</button>
+    <button class="algo-btn" onclick="showAlgo('knapsack',this)"><span class="dot"></span>0/1 Knapsack</button>
+    <button class="algo-btn" onclick="showAlgo('lis',this)"><span class="dot"></span>LIS</button>
+    <button class="algo-btn" onclick="showAlgo('lcs',this)"><span class="dot"></span>LCS</button>
+    <button class="algo-btn" onclick="showAlgo('grid',this)"><span class="dot"></span>Grid Paths</button>
+    <button class="algo-btn" onclick="showAlgo('mincost',this)"><span class="dot"></span>Min Cost DP</button>
+  </aside>
+
+  <div class="sim-area">
+
+    <!-- FIBONACCI -->
+    <div id="sec-fib" class="algo-section active">
+      <div class="panel">
+        <div class="panel-title">Fibonacci Style DP</div>
+        <p class="desc">The simplest DP: each state depends on previous ones. Watch the sequence build itself, saving every answer for future spells.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Compute F(n)</div><input class="spell-input sm" id="fib-n" type="number" value="12" min="1" max="20"></div>
+          <button class="btn btn-cast" onclick="fibAuto()">✦ Cast</button>
+          <button class="btn btn-step" onclick="fibStep()">Step →</button>
+          <button class="btn btn-reset" onclick="fibReset()">Reset</button>
+          <div class="speed-wrap">🐢<input type="range" id="fib-speed" min="100" max="1500" value="900" step="50">🐇</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Memoization Table</div>
+        <div id="fib-chain" class="fib-chain"></div>
+        <div style="margin-top:20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div class="result-box"><div>Answer</div><div class="result-val" id="fib-result">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Space O(n)</span><span class="badge time">Time O(n)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="fib-log"></div></div>
+    </div>
+
+    <!-- KNAPSACK -->
+    <div id="sec-knapsack" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">0 / 1 Knapsack</div>
+        <p class="desc">Each item can be taken once. Build a 2D table dp[i][w] = best value using first i items with capacity w.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Items (val:wt,…)</div><input class="spell-input" id="ks-items" value="4:2,3:3,5:4,2:1,6:5"></div>
+          <div class="input-group"><div class="input-label">Capacity</div><input class="spell-input sm" id="ks-cap" type="number" value="8"></div>
+          <button class="btn btn-cast" onclick="ksAuto()">✦ Cast</button>
+          <button class="btn btn-step" onclick="ksStep()">Step →</button>
+          <button class="btn btn-reset" onclick="ksReset()">Reset</button>
+        </div>
+        <div class="item-list" id="ks-items-display"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">DP Table <small style="font-size:10px;color:var(--text-dim);margin-left:8px;">rows=items, cols=capacity</small></div>
+        <div class="dp-table-wrap" id="ks-table-wrap"></div>
+        <div style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div class="result-box"><div>Max Value</div><div class="result-val" id="ks-result">—</div></div>
+          <div class="result-box" style="flex:1;"><div>Items Taken</div><div id="ks-taken" style="margin-top:6px;font-size:13px;color:var(--green);font-family:'Cinzel',serif;letter-spacing:1px;">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Space O(n·W)</span><span class="badge time">Time O(n·W)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="ks-log"></div></div>
+    </div>
+
+    <!-- LIS -->
+    <div id="sec-lis" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Longest Increasing Subsequence</div>
+        <p class="desc">dp[i] = length of LIS ending at index i. For each element, check all previous smaller elements and extend the best LIS found.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Array</div><input class="spell-input" id="lis-arr" value="3,10,2,1,20,4,9,5,7"></div>
+          <button class="btn btn-cast" onclick="lisAuto()">✦ Cast</button>
+          <button class="btn btn-step" onclick="lisStep()">Step →</button>
+          <button class="btn btn-reset" onclick="lisReset()">Reset</button>
+          <div class="speed-wrap">🐢<input type="range" id="lis-speed" min="100" max="1500" value="800" step="50">🐇</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Visualization</div>
+        <div class="bar-chart" id="lis-bars"></div>
+        <div style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div class="result-box"><div>LIS Length</div><div class="result-val" id="lis-result">—</div></div>
+          <div class="result-box" style="flex:1;"><div>Subsequence</div><div id="lis-seq" style="margin-top:6px;font-size:13px;color:var(--green);font-family:'Cinzel',serif;letter-spacing:1px;">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Space O(n)</span><span class="badge time">Time O(n²)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="lis-log"></div></div>
+    </div>
+
+    <!-- LCS -->
+    <div id="sec-lcs" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Longest Common Subsequence</div>
+        <p class="desc">Build a 2D table. If characters match: dp[i][j] = dp[i-1][j-1]+1. Otherwise take max of left or top cell.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">String A</div><input class="spell-input sm" id="lcs-a" value="ABCBDAB" style="min-width:120px;"></div>
+          <div class="input-group"><div class="input-label">String B</div><input class="spell-input sm" id="lcs-b" value="BDCAB" style="min-width:120px;"></div>
+          <button class="btn btn-cast" onclick="lcsAuto()">✦ Cast</button>
+          <button class="btn btn-step" onclick="lcsStep()">Step →</button>
+          <button class="btn btn-reset" onclick="lcsReset()">Reset</button>
+          <div class="speed-wrap">🐢<input type="range" id="lcs-speed" min="100" max="1500" value="700" step="50">🐇</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">DP Table</div>
+        <div class="lcs-grid" id="lcs-table-wrap"></div>
+        <div style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div class="result-box"><div>LCS Length</div><div class="result-val" id="lcs-result">—</div></div>
+          <div class="result-box" style="flex:1;"><div>Common Subsequence</div><div id="lcs-seq" style="margin-top:6px;font-size:15px;color:var(--green);font-family:'Cinzel',serif;letter-spacing:3px;">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Space O(m·n)</span><span class="badge time">Time O(m·n)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="lcs-log"></div></div>
+    </div>
+
+    <!-- GRID DP -->
+    <div id="sec-grid" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Grid Path DP</div>
+        <p class="desc">Count paths from top-left to bottom-right, moving only right or down. dp[i][j] = dp[i-1][j] + dp[i][j-1]. Click cells to toggle walls.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Grid Size (n×n)</div><input class="spell-input sm" id="grid-n" type="number" value="5" min="2" max="8"></div>
+          <button class="btn btn-cast" onclick="gridBuild()">Build Grid</button>
+          <button class="btn btn-cast" onclick="gridSolve()">✦ Solve</button>
+          <button class="btn btn-reset" onclick="gridReset()">Reset</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Grid</div>
+        <div id="grid-wrap" style="overflow-x:auto;"></div>
+        <div style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div class="result-box"><div>Total Paths</div><div class="result-val" id="grid-result">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Space O(n²)</span><span class="badge time">Time O(n²)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="grid-log"></div></div>
+    </div>
+
+    <!-- MIN COST -->
+    <div id="sec-mincost" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Min Cost DP (Staircase)</div>
+        <p class="desc">Each step has a cost. You can climb 1 or 2 steps. dp[i] = cost[i] + min(dp[i-1], dp[i-2]). Answer = min(dp[n-1], dp[n-2]).</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Step Costs</div><input class="spell-input" id="mc-arr" value="10,15,20,5,8,3,12,7,6"></div>
+          <button class="btn btn-cast" onclick="mcAuto()">✦ Cast</button>
+          <button class="btn btn-step" onclick="mcStep()">Step →</button>
+          <button class="btn btn-reset" onclick="mcReset()">Reset</button>
+          <div class="speed-wrap">🐢<input type="range" id="mc-speed" min="100" max="1500" value="800" step="50">🐇</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Staircase Visualization</div>
+        <div class="bar-chart" id="mc-bars" style="height:180px;"></div>
+        <div style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div class="result-box"><div>Min Cost</div><div class="result-val" id="mc-result">—</div></div>
+          <div class="result-box" style="flex:1;"><div>Optimal Path</div><div id="mc-path" style="margin-top:6px;font-size:13px;color:var(--amber);font-family:'Cinzel',serif;letter-spacing:1px;">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Space O(n)</span><span class="badge time">Time O(n)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="mc-log"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Starfield ──────────────────────────────────────────────
+const bgC=document.getElementById('bgCanvas'),bgX=bgC.getContext('2d');let bgStars=[];
+function bgResize(){bgC.width=innerWidth;bgC.height=innerHeight;bgStars=Array.from({length:180},()=>({x:Math.random()*bgC.width,y:Math.random()*bgC.height,r:Math.random()*1.2+0.2,a:Math.random(),s:0.003+Math.random()*0.005}));}
+bgResize();window.addEventListener('resize',bgResize);
+(function animBg(){bgX.clearRect(0,0,bgC.width,bgC.height);bgStars.forEach(s=>{s.a+=s.s;if(s.a>1||s.a<0)s.s*=-1;bgX.beginPath();bgX.arc(s.x,s.y,s.r,0,Math.PI*2);bgX.fillStyle=`rgba(201,168,76,${s.a*0.7})`;bgX.fill();});requestAnimationFrame(animBg);})();
+
+// ── Sound System ──────────────────────────────────────────
+let _ac=null;
+function ac(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return _ac;}
+function tone(f,t='sine',d=0.15,v=0.18,dl=0){
+  try{const ctx=ac();if(!ctx)return;if(ctx.state==='suspended')ctx.resume();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);o.type=t;
+    o.frequency.setValueAtTime(f,ctx.currentTime+dl);
+    g.gain.setValueAtTime(v,ctx.currentTime+dl);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dl+d);
+    o.start(ctx.currentTime+dl);o.stop(ctx.currentTime+dl+d+0.05);
+  }catch(e){}
+}
+function sndClick(){tone(880,'sine',0.07,0.18);}
+function sndStep(){tone(500,'triangle',0.09,0.1);}
+function sndFound(){[523,659,784,1047].forEach((f,i)=>tone(f,'sine',0.28,0.22,i*0.08));}
+function sndWarn(){tone(220,'sawtooth',0.14,0.14);}
+function sndPop(){tone(660,'sine',0.06,0.12);}
+
+// ── Utils ─────────────────────────────────────────────────
+function spd(id){return Math.max(80,1600-parseInt(document.getElementById(id).value||900));}
+function showAlgo(id,btn){
+  document.querySelectorAll('.algo-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.algo-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  sndClick();
+}
+function logAdd(id,msg,cls=''){
+  const b=document.getElementById(id);if(!b)return;
+  const e=document.createElement('div');e.className='log-entry '+(cls||'');e.textContent=msg;b.prepend(e);
+  while(b.children.length>60)b.lastChild.remove();
+  if(cls==='found-msg')sndFound();else if(cls==='warn')sndWarn();else sndPop();
+}
+function logClear(id){const b=document.getElementById(id);if(b)b.innerHTML='';}
+function getArr(id){return document.getElementById(id).value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function stopAll(){
+  if(fibState)clearTimeout(fibState.timer),fibState.running=false;
+  if(ksState)clearTimeout(ksState.timer),ksState.running=false;
+  if(lisState)clearTimeout(lisState.timer),lisState.running=false;
+  if(lcsState)clearTimeout(lcsState.timer),lcsState.running=false;
+  if(mcState)clearTimeout(mcState.timer),mcState.running=false;
+}
+
+// ══════════════════════════════════════════════════════════
+// FIBONACCI DP
+// ══════════════════════════════════════════════════════════
+let fibState={dp:[],cur:0,n:0,running:false,timer:null};
+
+function fibReset(){
+  clearTimeout(fibState.timer);fibState.running=false;
+  fibState.dp=[];fibState.cur=0;fibState.n=0;
+  document.getElementById('fib-chain').innerHTML='';
+  document.getElementById('fib-result').textContent='—';
+  logClear('fib-log');
+}
+function fibBuildViz(){
+  const chain=document.getElementById('fib-chain');chain.innerHTML='';
+  for(let i=0;i<=fibState.n;i++){
+    const wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;align-items:center;';
+    const box=document.createElement('div');box.className='fib-box';box.id='fb-'+i;
+    box.textContent=fibState.dp[i]!==undefined?fibState.dp[i]:'?';
+    const idx=document.createElement('div');idx.className='fib-idx';idx.textContent='F('+i+')';
+    wrap.appendChild(box);wrap.appendChild(idx);chain.appendChild(wrap);
+    if(i<fibState.n){const arr=document.createElement('div');arr.className='fib-arrow';arr.textContent='→';chain.appendChild(arr);}
+  }
+}
+function fibUpdateViz(active){
+  document.querySelectorAll('.fib-box').forEach((b,i)=>{
+    b.className='fib-box';
+    if(fibState.dp[i]!==undefined)b.classList.add(i===active?'active':'done');
+    b.textContent=fibState.dp[i]!==undefined?fibState.dp[i]:'?';
+  });
+}
+function fibStep(){
+  const i=fibState.cur;
+  if(i>fibState.n){fibState.running=false;return;}
+  fibState.dp[i]=i<=1?i:fibState.dp[i-1]+fibState.dp[i-2];
+  fibUpdateViz(i);
+  if(i>1)logAdd('fib-log',`F(${i}) = F(${i-1})[${fibState.dp[i-1]}] + F(${i-2})[${fibState.dp[i-2]}] = ${fibState.dp[i]}`,'highlight');
+  else logAdd('fib-log',`Base case: F(${i}) = ${fibState.dp[i]}`);
+  if(i===fibState.n){document.getElementById('fib-result').textContent=fibState.dp[i];logAdd('fib-log',`✨ F(${fibState.n}) = ${fibState.dp[i]}`,'found-msg');}
+  fibState.cur++;
+}
+function fibAuto(){
+  stopAll();fibReset();
+  fibState.n=Math.min(parseInt(document.getElementById('fib-n').value)||12,20);
+  fibState.dp=new Array(fibState.n+1).fill(undefined);
+  fibState.cur=0;fibBuildViz();
+  logAdd('fib-log',`🔮 Computing F(${fibState.n})...`);
+  fibState.running=true;
+  const run=()=>{if(!fibState.running||fibState.cur>fibState.n){fibState.running=false;return;}fibStep();fibState.timer=setTimeout(run,spd('fib-speed'));};run();
+}
+
+// ══════════════════════════════════════════════════════════
+// 0/1 KNAPSACK
+// ══════════════════════════════════════════════════════════
+let ksState={dp:[],items:[],cap:0,steps:[],stepIdx:0,running:false,timer:null};
+
+function ksParseItems(){return document.getElementById('ks-items').value.split(',').map(s=>{const p=s.trim().split(':');return{val:parseInt(p[0]),wt:parseInt(p[1])};}).filter(x=>!isNaN(x.val)&&!isNaN(x.wt)&&x.wt>0);}
+function ksReset(){
+  clearTimeout(ksState.timer);ksState.running=false;
+  ksState.steps=[];ksState.stepIdx=0;ksState.dp=[];
+  document.getElementById('ks-table-wrap').innerHTML='';
+  document.getElementById('ks-result').textContent='—';
+  document.getElementById('ks-taken').textContent='—';
+  document.getElementById('ks-items-display').innerHTML='';
+  logClear('ks-log');
+}
+function ksInit(){
+  ksReset();
+  ksState.items=ksParseItems();ksState.cap=parseInt(document.getElementById('ks-cap').value)||8;
+  const n=ksState.items.length,W=ksState.cap;
+  ksState.dp=Array.from({length:n+1},()=>new Array(W+1).fill(0));
+  const disp=document.getElementById('ks-items-display');
+  disp.innerHTML=ksState.items.map((it,i)=>`<div class="item-card" id="ks-item-${i}">Item ${i+1}<span>val:${it.val} wt:${it.wt}</span></div>`).join('');
+  ksState.steps=[];
+  for(let i=1;i<=n;i++)for(let w=0;w<=W;w++)ksState.steps.push({i,w});
+  ksBuildTable(-1,-1);
+  logAdd('ks-log',`🎒 Items: ${ksState.items.map(it=>`[v${it.val}w${it.wt}]`).join(' ')} | Cap:${W}`);
+}
+function ksBuildTable(curI,curW){
+  const n=ksState.items.length,W=ksState.cap,dp=ksState.dp;
+  let html=`<table class="dp-table"><tr><th></th>`;
+  for(let w=0;w<=W;w++)html+=`<th>${w}</th>`;html+='</tr>';
+  for(let i=0;i<=n;i++){
+    const label=i===0?'∅':`I${i}(v${ksState.items[i-1].val}w${ksState.items[i-1].wt})`;
+    html+=`<tr><th style="font-size:9px;white-space:nowrap;padding:0 4px;">${label}</th>`;
+    for(let w=0;w<=W;w++){
+      let cls=i===curI&&w===curW?'cur':dp[i][w]>0?'done':'zero';
+      html+=`<td class="${cls}">${dp[i][w]}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</table>';
+  document.getElementById('ks-table-wrap').innerHTML=html;
+}
+function ksStep(){
+  if(!ksState.items.length){ksInit();}
+  if(ksState.stepIdx>=ksState.steps.length){ksBacktrack();return;}
+  const {i,w}=ksState.steps[ksState.stepIdx++];
+  const it=ksState.items[i-1];
+  if(it.wt>w)ksState.dp[i][w]=ksState.dp[i-1][w];
+  else ksState.dp[i][w]=Math.max(ksState.dp[i-1][w],ksState.dp[i-1][w-it.wt]+it.val);
+  ksBuildTable(i,w);
+  if(ksState.dp[i][w]>ksState.dp[i-1][w]&&it.wt<=w)logAdd('ks-log',`dp[${i}][${w}]: take I${i}(v${it.val}) → ${ksState.dp[i][w]}`,'highlight');
+}
+function ksBacktrack(){
+  const n=ksState.items.length,W=ksState.cap;
+  let w=W;const taken=[];
+  for(let i=n;i>=1;i--){if(ksState.dp[i][w]!==ksState.dp[i-1][w]){taken.push(i);w-=ksState.items[i-1].wt;}}
+  taken.forEach(i=>document.getElementById('ks-item-'+(i-1))?.classList.add('selected'));
+  document.getElementById('ks-result').textContent=ksState.dp[n][W];
+  document.getElementById('ks-taken').textContent='Items: '+taken.reverse().map(i=>`I${i}(v${ksState.items[i-1].val})`).join(', ');
+  logAdd('ks-log',`✨ Max value: ${ksState.dp[n][W]}`,'found-msg');
+}
+function ksAuto(){
+  stopAll();ksInit();ksState.running=true;
+  const run=()=>{if(!ksState.running)return;if(ksState.stepIdx>=ksState.steps.length){ksBacktrack();ksState.running=false;return;}ksStep();ksState.timer=setTimeout(run,100);};run();
+}
+
+// ══════════════════════════════════════════════════════════
+// LIS — one element per step
+// ══════════════════════════════════════════════════════════
+let lisState={arr:[],dp:[],parent:[],cur:0,running:false,timer:null};
+
+function lisReset(){
+  clearTimeout(lisState.timer);lisState.running=false;lisState.cur=0;
+  document.getElementById('lis-bars').innerHTML='';
+  document.getElementById('lis-result').textContent='—';
+  document.getElementById('lis-seq').textContent='—';
+  logClear('lis-log');
+}
+function lisBuildBars(activeI=-1){
+  const arr=lisState.arr,dp=lisState.dp,n=arr.length;
+  const maxVal=Math.max(...arr,1);
+  let html='';
+  for(let i=0;i<n;i++){
+    const h=Math.round((arr[i]/maxVal)*110)+16;
+    let cls='bar';
+    if(i===activeI)cls+=' active';
+    else if(dp[i]>0)cls+=' lis';
+    const dpLabel=dp[i]>0?`<div class="bar-dp-val">${dp[i]}</div>`:'';
+    html+=`<div class="bar-wrap"><div class="${cls}" style="height:${h}px">${dpLabel}</div><div class="bar-val">${arr[i]}</div><div class="bar-idx">${i}</div></div>`;
+  }
+  document.getElementById('lis-bars').innerHTML=html;
+}
+function lisInit(){
+  lisReset();
+  lisState.arr=getArr('lis-arr');
+  const n=lisState.arr.length;
+  lisState.dp=new Array(n).fill(0);
+  lisState.parent=new Array(n).fill(-1);
+  lisState.cur=0;lisBuildBars();
+  logAdd('lis-log',`🔮 Array: [${lisState.arr.join(', ')}]`);
+}
+function lisStep(){
+  if(!lisState.arr.length)lisInit();
+  const {arr,dp,parent}=lisState;const n=arr.length;
+  if(lisState.cur>=n){lisFinish();return;}
+  const i=lisState.cur;
+  // Compute dp[i] = max LIS ending at i
+  dp[i]=1;parent[i]=-1;
+  for(let j=0;j<i;j++){
+    if(arr[j]<arr[i]&&dp[j]+1>dp[i]){dp[i]=dp[j]+1;parent[i]=j;}
+  }
+  logAdd('lis-log',`dp[${i}](arr=${arr[i]}) = ${dp[i]}`,'highlight');
+  lisBuildBars(i);
+  lisState.cur++;
+  if(lisState.cur>=n){setTimeout(()=>lisFinish(),400);}
+}
+function lisFinish(){
+  lisState.running=false;
+  const {dp,parent,arr}=lisState;
+  const maxLen=Math.max(...dp);
+  // Find the last index with max dp value (for correct reconstruction)
+  let idx=-1;
+  for(let i=dp.length-1;i>=0;i--){if(dp[i]===maxLen){idx=i;break;}}
+  const seq=[];let cur=idx;
+  while(cur!==-1){seq.push(arr[cur]);cur=parent[cur];}
+  seq.reverse();
+  document.getElementById('lis-result').textContent=maxLen;
+  document.getElementById('lis-seq').textContent=seq.join(' → ');
+  logAdd('lis-log',`✨ LIS = [${seq.join(', ')}] length ${maxLen}`,'found-msg');
+  lisBuildBars(-1);
+}
+function lisAuto(){
+  stopAll();lisInit();lisState.running=true;
+  const delay=spd('lis-speed');
+  const run=()=>{if(!lisState.running)return;if(lisState.cur>=lisState.arr.length){lisFinish();return;}lisStep();lisState.timer=setTimeout(run,delay);};run();
+}
+
+// ══════════════════════════════════════════════════════════
+// LCS
+// ══════════════════════════════════════════════════════════
+let lcsState={dp:[],A:'',B:'',i:1,j:1,running:false,timer:null};
+
+function lcsReset(){
+  clearTimeout(lcsState.timer);lcsState.running=false;lcsState.i=1;lcsState.j=1;
+  document.getElementById('lcs-table-wrap').innerHTML='';
+  document.getElementById('lcs-result').textContent='—';
+  document.getElementById('lcs-seq').textContent='—';
+  logClear('lcs-log');
+}
+function lcsBuildTable(curI=-1,curJ=-1){
+  const A=lcsState.A,B=lcsState.B,dp=lcsState.dp;
+  let html='<table class="lcs-table"><tr><th></th><th>ε</th>';
+  for(let j=0;j<B.length;j++)html+=`<th>${B[j]}</th>`;html+='</tr>';
+  for(let i=0;i<=A.length;i++){
+    html+=`<tr><th>${i===0?'ε':A[i-1]}</th>`;
+    for(let j=0;j<=B.length;j++){
+      let cls=i===curI&&j===curJ?'cur':(i>0&&j>0&&A[i-1]===B[j-1]&&dp[i][j]>0?'match':'');
+      html+=`<td class="${cls}">${dp[i][j]}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</table>';
+  document.getElementById('lcs-table-wrap').innerHTML=html;
+}
+function lcsInit(){
+  lcsReset();
+  lcsState.A=document.getElementById('lcs-a').value.trim().toUpperCase();
+  lcsState.B=document.getElementById('lcs-b').value.trim().toUpperCase();
+  const m=lcsState.A.length,n=lcsState.B.length;
+  lcsState.dp=Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  lcsState.i=1;lcsState.j=1;lcsBuildTable();
+  logAdd('lcs-log',`🔮 A="${lcsState.A}" | B="${lcsState.B}"`);
+}
+function lcsStep(){
+  if(!lcsState.A)lcsInit();
+  const {A,B,dp}=lcsState;const m=A.length,n=B.length;
+  if(lcsState.i>m){lcsFinish();return;}
+  const i=lcsState.i,j=lcsState.j;
+  if(A[i-1]===B[j-1]){dp[i][j]=dp[i-1][j-1]+1;logAdd('lcs-log',`Match '${A[i-1]}' at [${i},${j}] → dp=${dp[i][j]}`,'highlight');}
+  else{dp[i][j]=Math.max(dp[i-1][j],dp[i][j-1]);}
+  lcsBuildTable(i,j);
+  lcsState.j++;
+  if(lcsState.j>n){lcsState.j=1;lcsState.i++;}
+}
+function lcsFinish(){
+  lcsState.running=false;
+  const {A,B,dp}=lcsState;const m=A.length,n=B.length;
+  let i=m,j=n,seq='';
+  while(i>0&&j>0){
+    if(A[i-1]===B[j-1]){seq=A[i-1]+seq;i--;j--;}
+    else if(dp[i-1][j]>dp[i][j-1])i--;else j--;
+  }
+  document.getElementById('lcs-result').textContent=dp[m][n];
+  document.getElementById('lcs-seq').textContent=seq||'—';
+  logAdd('lcs-log',`✨ LCS="${seq}" length ${dp[m][n]}`,'found-msg');
+}
+function lcsAuto(){
+  stopAll();lcsInit();lcsState.running=true;
+  const delay=spd('lcs-speed');
+  const run=()=>{if(!lcsState.running)return;if(lcsState.i>lcsState.A.length){lcsFinish();return;}lcsStep();lcsState.timer=setTimeout(run,delay);};run();
+}
+
+// ══════════════════════════════════════════════════════════
+// GRID DP
+// ══════════════════════════════════════════════════════════
+let gridState={n:5,dp:[],walls:new Set(),built:false,solving:false};
+
+function gridReset(){
+  gridState.built=false;gridState.walls=new Set();gridState.dp=[];gridState.solving=false;
+  document.getElementById('grid-wrap').innerHTML='';
+  document.getElementById('grid-result').textContent='—';
+  logClear('grid-log');
+}
+function gridBuild(){
+  gridReset();
+  gridState.n=Math.min(parseInt(document.getElementById('grid-n').value)||5,8);
+  gridState.dp=Array.from({length:gridState.n},()=>new Array(gridState.n).fill(0));
+  gridState.built=true;gridRender(-1,-1);
+  logAdd('grid-log',`🔮 Built ${gridState.n}×${gridState.n} grid. Click cells to add walls.`);
+}
+function gridRender(curI=-1,curJ=-1){
+  const n=gridState.n,dp=gridState.dp;
+  let html='<table class="grid-table">';
+  for(let i=0;i<n;i++){
+    html+='<tr>';
+    for(let j=0;j<n;j++){
+      const key=i+','+j;
+      let cls='';
+      if(gridState.walls.has(key))cls='wall';
+      else if(i===0&&j===0)cls='start';
+      else if(i===n-1&&j===n-1)cls='end';
+      else if(i===curI&&j===curJ)cls='cur';
+      else if(dp[i][j]>0)cls='done';
+      const val=gridState.walls.has(key)?'✖':(dp[i][j]||'');
+      html+=`<td class="${cls}" onclick="gridToggleWall(${i},${j})">${val}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</table>';
+  document.getElementById('grid-wrap').innerHTML=html;
+}
+function gridToggleWall(i,j){
+  if(!gridState.built||gridState.solving)return;
+  if(i===0&&j===0)return;if(i===gridState.n-1&&j===gridState.n-1)return;
+  const k=i+','+j;
+  if(gridState.walls.has(k))gridState.walls.delete(k);else gridState.walls.add(k);
+  gridRender();
+}
+async function gridSolve(){
+  if(!gridState.built)gridBuild();
+  gridState.solving=true;
+  const n=gridState.n;
+  gridState.dp=Array.from({length:n},()=>new Array(n).fill(0));
+  logClear('grid-log');
+  for(let i=0;i<n;i++){
+    for(let j=0;j<n;j++){
+      if(gridState.walls.has(i+','+j)){gridState.dp[i][j]=0;continue;}
+      if(i===0&&j===0){gridState.dp[0][0]=1;continue;}
+      const top=i>0?gridState.dp[i-1][j]:0;
+      const left=j>0?gridState.dp[i][j-1]:0;
+      gridState.dp[i][j]=top+left;
+    }
+    gridRender(i,n-1);
+    await sleep(180);
+  }
+  logAdd('grid-log',`✨ Paths to (${n-1},${n-1}): ${gridState.dp[n-1][n-1]}`,'found-msg');
+  document.getElementById('grid-result').textContent=gridState.dp[n-1][n-1];
+  gridState.solving=false;gridRender();
+}
+
+// ══════════════════════════════════════════════════════════
+// MIN COST DP — Standard LeetCode 746 formulation
+// ══════════════════════════════════════════════════════════
+let mcState={arr:[],dp:[],parent:[],cur:0,running:false,timer:null};
+
+function mcReset(){
+  clearTimeout(mcState.timer);mcState.running=false;mcState.cur=0;
+  document.getElementById('mc-bars').innerHTML='';
+  document.getElementById('mc-result').textContent='—';
+  document.getElementById('mc-path').textContent='—';
+  logClear('mc-log');
+}
+function mcBuildBars(activeI=-1){
+  const arr=mcState.arr,dp=mcState.dp,n=arr.length;
+  const maxV=Math.max(...arr,1);
+  let html='';
+  for(let i=0;i<n;i++){
+    const h=Math.round((arr[i]/maxV)*140)+20;
+    let cls='bar';
+    if(i===activeI)cls+=' active';
+    else if(dp[i]!==undefined&&dp[i]!==Infinity)cls+=' lis';
+    const dpLbl=(dp[i]!==undefined&&dp[i]!==Infinity)?`<div class="bar-dp-val">${dp[i]}</div>`:'';
+    html+=`<div class="bar-wrap"><div class="${cls}" style="height:${h}px">${dpLbl}</div><div class="bar-val">${arr[i]}</div><div class="bar-idx">s${i}</div></div>`;
+  }
+  document.getElementById('mc-bars').innerHTML=html;
+}
+function mcInit(){
+  mcReset();
+  mcState.arr=getArr('mc-arr');const n=mcState.arr.length;
+  mcState.dp=new Array(n).fill(undefined);
+  mcState.parent=new Array(n).fill(-1);
+  // Base cases: dp[0] = arr[0], dp[1] = arr[1] (can start from either)
+  if(n>0){mcState.dp[0]=mcState.arr[0];}
+  if(n>1){mcState.dp[1]=mcState.arr[1];}
+  mcState.cur=2;
+  mcBuildBars(Math.min(1,n-1));
+  logAdd('mc-log',`🔮 Steps: [${mcState.arr.join(', ')}]`);
+  logAdd('mc-log',`Base: dp[0]=${mcState.dp[0]}${n>1?' dp[1]='+mcState.dp[1]:''}  (start from either)`, 'highlight');
+}
+function mcStep(){
+  if(!mcState.arr.length)mcInit();
+  const {arr,dp,parent}=mcState;const n=arr.length;
+  if(mcState.cur>=n){mcFinish();return;}
+  const i=mcState.cur;
+  // dp[i] = arr[i] + min(dp[i-1], dp[i-2])
+  const from1=dp[i-1]+arr[i];
+  const from2=i>=2?dp[i-2]+arr[i]:Infinity;
+  if(from1<=from2){dp[i]=from1;parent[i]=i-1;}else{dp[i]=from2;parent[i]=i-2;}
+  logAdd('mc-log',`dp[${i}] = arr[${i}](${arr[i]}) + min(dp[${i-1}]=${dp[i-1]}${i>=2?',dp['+(i-2)+']='+dp[i-2]:''}) = ${dp[i]}`,'highlight');
+  mcBuildBars(i);mcState.cur++;
+}
+function mcFinish(){
+  mcState.running=false;
+  const {arr,dp,parent}=mcState;const n=arr.length;
+  // Answer: min cost to reach top (beyond last stair) = min(dp[n-1], dp[n-2])
+  let endIdx=n-1;
+  if(n>=2&&dp[n-2]<dp[n-1])endIdx=n-2;
+  const minCost=n>=2?Math.min(dp[n-1],dp[n-2]):dp[0];
+  let i=endIdx;const path=[];
+  while(i!==-1){path.push(`s${i}(cost:${arr[i]})`);i=parent[i];}
+  path.reverse();
+  document.getElementById('mc-result').textContent=minCost;
+  document.getElementById('mc-path').textContent=path.join(' → ');
+  logAdd('mc-log',`✨ Min total cost: ${minCost}`,'found-msg');
+}
+function mcAuto(){
+  stopAll();mcInit();mcState.running=true;
+  const delay=spd('mc-speed');
+  const run=()=>{if(!mcState.running)return;if(mcState.cur>=mcState.arr.length){mcFinish();return;}mcStep();mcState.timer=setTimeout(run,delay);};run();
+}
+
+// Auto-start on load
+window.addEventListener('load',()=>{
+  fibState.n=12;fibState.dp=new Array(13).fill(undefined);fibBuildViz();
+  setTimeout(()=>fibAuto(),600);
+});
+</script>
+</body>
+</html>

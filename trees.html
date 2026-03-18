@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tree &amp; String Runes — AlgoGrimoire</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --void:#05050f;--deep:#09091d;--surface:#0f0f28;--card:#141438;--card2:#1a1a45;
+  --gold:#c9a84c;--gold-bright:#f0c96e;--parchment:#f0e0b8;--text:#d0c4a0;--text-dim:#9a8a6a;
+  --border:#22224a;--green:#10b981;--blue:#3b82f6;--purple:#8b5cf6;--red:#ef4444;--amber:#f59e0b;
+  --pink:#f472b6;--accent:#f472b6;
+}
+body{background:var(--void);color:var(--text);font-family:'Crimson Text',serif;min-height:100vh;overflow-x:hidden;}
+canvas.bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(5,5,15,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:12px 40px;display:flex;align-items:center;gap:16px;}
+.nav-logo{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);text-decoration:none;}
+.nav-back{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;text-transform:uppercase;transition:color 0.3s;}
+.nav-back:hover{color:var(--pink);}
+.nav-sep{color:var(--border);}
+.nav-current{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--pink);text-transform:uppercase;}
+.nav-links{display:flex;gap:12px;margin-left:auto;}
+.nav-link{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-decoration:none;text-transform:uppercase;padding:5px 12px;border:1px solid transparent;border-radius:20px;transition:all 0.3s;}
+.nav-link:hover{color:var(--gold);border-color:var(--border);}
+
+.page-header{position:relative;z-index:1;text-align:center;padding:48px 40px 32px;}
+.page-badge{display:inline-block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;color:var(--pink);text-transform:uppercase;border:1px solid rgba(244,114,182,0.3);padding:5px 18px;border-radius:30px;background:rgba(244,114,182,0.06);margin-bottom:16px;}
+.page-title{font-family:'Cinzel Decorative',serif;font-size:clamp(28px,5vw,52px);color:var(--gold);text-shadow:0 0 40px rgba(201,168,76,0.4);margin-bottom:8px;}
+.page-sub{font-size:16px;color:var(--text-dim);font-style:italic;}
+.divider{width:180px;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:20px auto;opacity:0.5;}
+
+.main-layout{position:relative;z-index:1;display:grid;grid-template-columns:220px 1fr;gap:24px;max-width:1300px;margin:0 auto;padding:0 32px 60px;}
+@media(max-width:800px){.main-layout{grid-template-columns:1fr;}}
+
+.sidebar{height:fit-content;position:sticky;top:80px;}
+.sidebar-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase;padding:0 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.algo-btn{width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:10px;padding:10px 14px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all 0.3s;margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+.algo-btn:hover{background:rgba(255,255,255,0.04);color:var(--text);border-color:var(--border);}
+.algo-btn.active{background:rgba(244,114,182,0.1);border-color:rgba(244,114,182,0.3);color:var(--pink);}
+.algo-btn .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+.sim-area{display:flex;flex-direction:column;gap:20px;}
+.algo-section{display:none;}.algo-section.active{display:flex;flex-direction:column;gap:20px;}
+
+.panel{background:linear-gradient(145deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;padding:24px;}
+.panel-title{font-family:'Cinzel',serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.panel-title::before{content:'';width:20px;height:1px;background:var(--gold);opacity:0.5;}
+
+.input-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.input-group{display:flex;flex-direction:column;gap:6px;}
+.input-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.spell-input{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-family:'Crimson Text',serif;font-size:15px;outline:none;transition:border-color 0.3s;}
+.spell-input:focus{border-color:var(--pink);}
+.spell-input.sm{width:120px;}
+
+.btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;border:none;border-radius:8px;padding:9px 18px;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:8px;}
+.btn-cast{background:linear-gradient(135deg,#7a1a4a,var(--pink));color:#fff;box-shadow:0 4px 20px rgba(244,114,182,0.3);}
+.btn-cast:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(244,114,182,0.4);}
+.btn-step{background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--gold);}
+.btn-step:hover{background:rgba(201,168,76,0.2);}
+.btn-reset{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red);}
+.btn-reset:hover{background:rgba(239,68,68,0.2);}
+.btn-add{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);}
+.btn-add:hover{background:rgba(16,185,129,0.2);}
+.speed-wrap{display:flex;align-items:center;gap:6px;font-size:14px;}
+input[type=range]{width:90px;accent-color:var(--pink);cursor:pointer;}
+
+.desc{font-size:15px;color:var(--text-dim);font-style:italic;line-height:1.6;margin-bottom:16px;}
+.log-box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-height:150px;overflow-y:auto;font-family:'Crimson Text',serif;font-size:14px;}
+.log-entry{padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-dim);}
+.log-entry.highlight{color:var(--pink);}
+.log-entry.found-msg{color:var(--green);}
+.log-entry.warn{color:var(--amber);}
+
+.badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:3px 10px;border-radius:20px;text-transform:uppercase;background:rgba(244,114,182,0.1);border:1px solid rgba(244,114,182,0.25);color:var(--pink);}
+.badge.time{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25);color:var(--green);}
+.result-box{background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.15);border-radius:10px;padding:12px 18px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;}
+.result-val{font-size:20px;color:var(--pink);font-family:'Cinzel Decorative',serif;margin-top:4px;}
+
+/* TREE CANVAS */
+.tree-canvas-wrap{position:relative;width:100%;overflow:hidden;border-radius:12px;background:rgba(0,0,0,0.2);}
+
+/* TREE NODE INFO */
+.tree-info{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.tree-node-info{background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.15);border-radius:8px;padding:6px 12px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;}
+.tree-node-info .nval{font-size:16px;color:var(--pink);display:block;margin-bottom:2px;}
+.tree-node-info .nlabel{font-size:9px;color:var(--text-dim);}
+
+/* STRING CELLS */
+.str-row{display:flex;gap:4px;flex-wrap:wrap;padding:8px 0;}
+.str-cell{min-width:38px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-family:'Cinzel',serif;transition:all 0.3s;padding:0 4px;}
+.str-cell .sc{font-size:16px;font-weight:700;}
+.str-cell .si{font-size:8px;color:var(--text-dim);margin-top:1px;}
+.str-cell .sv{font-size:10px;color:var(--text-dim);margin-top:1px;}
+.str-cell.match{background:rgba(16,185,129,0.15);border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(16,185,129,0.25);}
+.str-cell.cur{background:rgba(201,168,76,0.2);border-color:var(--gold);color:var(--gold-bright);transform:translateY(-4px);box-shadow:0 0 14px rgba(201,168,76,0.4);}
+.str-cell.mismatch{background:rgba(239,68,68,0.12);border-color:var(--red);color:var(--red);}
+.str-cell.prefix{background:rgba(244,114,182,0.12);border-color:var(--pink);color:var(--pink);}
+.str-cell.hash-val{background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.3);color:#c084fc;}
+.str-cell.match-found{background:rgba(244,114,182,0.2);border-color:var(--pink);color:var(--pink);box-shadow:0 0 12px rgba(244,114,182,0.3);}
+
+/* MOBILE */
+@media(max-width:700px){
+  nav{padding:10px 12px;gap:8px;flex-wrap:wrap;}
+  .nav-links{overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;gap:4px;margin-left:0;width:100%;}
+  .nav-links::-webkit-scrollbar{display:none;}
+  .nav-link{font-size:10px;padding:4px 8px;flex-shrink:0;}
+  .page-header{padding:24px 14px 16px;}
+  .page-title{font-size:clamp(22px,6vw,40px)!important;}
+  .main-layout{padding:0 10px 40px!important;gap:12px;}
+  .sidebar{position:static!important;display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:4px;padding-bottom:8px;scrollbar-width:none;}
+  .sidebar::-webkit-scrollbar{display:none;}
+  .sidebar-title{display:none;}
+  .algo-btn{flex-shrink:0;width:auto;white-space:nowrap;padding:8px 12px;font-size:11px;margin-bottom:0;}
+  .panel{padding:14px 12px;}
+  .input-row{gap:8px;}
+  .spell-input{font-size:14px;min-width:0;}
+  .spell-input.sm{width:100px;min-width:0;}
+  .btn{padding:8px 12px;font-size:10px;letter-spacing:1px;}
+  .str-cell{min-width:30px;height:38px;}
+  .str-cell .sc{font-size:13px;}
+  input[type=range]{width:70px;}
+  .result-val{font-size:17px;}
+  .tree-canvas-wrap canvas{height:220px!important;}
+}
+</style>
+</head>
+<body>
+<canvas class="bg" id="bgCanvas"></canvas>
+<canvas id="sparkCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;"></canvas>
+
+<nav>
+  <a href="index.html" class="nav-logo">⚯͛ AlgoGrimoire</a>
+  <span class="nav-sep">›</span>
+  <a href="index.html" class="nav-back">Chapters</a>
+  <span class="nav-sep">›</span>
+  <span class="nav-current">Chapter VI · Tree &amp; String Runes</span>
+  <div class="nav-links">
+    <a href="arrays.html" class="nav-link">Arrays</a>
+    <a href="graphs.html" class="nav-link">Graphs</a>
+    <a href="dp.html" class="nav-link">DP</a>
+    <a href="ds.html" class="nav-link">Structures</a>
+    <a href="math.html" class="nav-link">Math</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-badge">Chapter VI</div>
+  <h1 class="page-title">Tree &amp; String Runes</h1>
+  <p class="page-sub">Branches of knowledge. Patterns woven in letters.</p>
+  <div class="divider"></div>
+</div>
+
+<div class="main-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Spells</div>
+    <button class="algo-btn active" onclick="showAlgo('treedfs',this)"><span class="dot"></span>Tree DFS</button>
+    <button class="algo-btn" onclick="showAlgo('subtree',this)"><span class="dot"></span>Subtree Size / Depth</button>
+    <button class="algo-btn" onclick="showAlgo('kmp',this)"><span class="dot"></span>KMP — Prefix Function</button>
+    <button class="algo-btn" onclick="showAlgo('zfunc',this)"><span class="dot"></span>Z-Algorithm</button>
+    <button class="algo-btn" onclick="showAlgo('strhash',this)"><span class="dot"></span>String Hashing</button>
+  </aside>
+
+  <div class="sim-area">
+
+    <!-- TREE DFS -->
+    <div id="sec-treedfs" class="algo-section active">
+      <div class="panel">
+        <div class="panel-title">Tree DFS — Traversal Orders</div>
+        <p class="desc">Pre-order: visit node, then children. Post-order: visit children first, then node. BFS: level by level. All run in O(n).</p>
+        <div class="input-row">
+          <div class="input-group">
+            <div class="input-label">Edges (parent-child, comma separated)</div>
+            <input class="spell-input" id="tdfs-edges" value="1-2,1-3,2-4,2-5,3-6,3-7,5-8,5-9" style="min-width:240px;">
+          </div>
+          <div class="input-group"><div class="input-label">Root</div><input class="spell-input sm" id="tdfs-root" type="number" value="1" style="width:70px;"></div>
+          <button class="btn btn-add" onclick="tdfsInit()">Build Tree</button>
+        </div>
+        <div class="input-row" style="margin-top:10px;">
+          <div class="input-group">
+            <div class="input-label">Traversal</div>
+            <select class="spell-input sm" id="tdfs-mode" style="width:160px;">
+              <option value="pre">Pre-order</option>
+              <option value="post">Post-order</option>
+              <option value="bfs">BFS (level)</option>
+            </select>
+          </div>
+          <button class="btn btn-cast" onclick="tdfsAuto(event)">✦ Traverse</button>
+          <button class="btn btn-reset" onclick="tdfsReset()">Reset</button>
+          <div class="speed-wrap">🐢<input type="range" id="tdfs-speed" min="100" max="1500" value="800" step="50">🐇</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Tree Visualization</div>
+        <div class="tree-canvas-wrap"><canvas id="tree-canvas" height="300"></canvas></div>
+        <div class="tree-info">
+          <div class="result-box"><div>Visit Order</div><div id="tdfs-order" style="font-family:'Cinzel',serif;font-size:13px;color:var(--green);margin-top:6px;letter-spacing:1px;">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;">
+            <span class="badge">Time O(n)</span><span class="badge time">Space O(n)</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="tdfs-log"></div></div>
+    </div>
+
+    <!-- SUBTREE SIZE / DEPTH -->
+    <div id="sec-subtree" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Subtree Size &amp; Depth</div>
+        <p class="desc">Post-order DFS computes subtree sizes (all descendants + self). Depth computed pre-order (parent depth + 1). Essential for tree DP.</p>
+        <div class="input-row">
+          <div class="input-group">
+            <div class="input-label">Edges</div>
+            <input class="spell-input" id="sub-edges" value="1-2,1-3,2-4,2-5,3-6,4-7,4-8" style="min-width:220px;">
+          </div>
+          <div class="input-group"><div class="input-label">Root</div><input class="spell-input sm" id="sub-root" type="number" value="1" style="width:70px;"></div>
+          <button class="btn btn-cast" onclick="subtreeRun(event)">✦ Compute</button>
+          <button class="btn btn-reset" onclick="subtreeReset()">Reset</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Tree + Subtree Info</div>
+        <div class="tree-canvas-wrap"><canvas id="subtree-canvas" height="300"></canvas></div>
+        <div class="tree-info" id="subtree-info"></div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="sub-log2"></div></div>
+    </div>
+
+    <!-- KMP -->
+    <div id="sec-kmp" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">KMP — Prefix (Failure) Function</div>
+        <p class="desc">failure[i] = length of longest proper prefix of pattern[0..i] that is also a suffix. Enables O(n+m) matching by skipping redundant comparisons.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Text (haystack)</div><input class="spell-input" id="kmp-text" value="AABAACAADAABAABA" style="min-width:200px;"></div>
+          <div class="input-group"><div class="input-label">Pattern (needle)</div><input class="spell-input sm" id="kmp-pat" value="AABA" style="min-width:100px;"></div>
+          <button class="btn btn-cast" onclick="kmpAuto(event)">✦ Cast</button>
+          <button class="btn btn-reset" onclick="kmpReset()">Reset</button>
+          <div class="speed-wrap">🐢<input type="range" id="kmp-speed" min="100" max="1500" value="700" step="50">🐇</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Failure Function (Pattern)</div>
+        <div class="str-row" id="kmp-pat-cells"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Text Matching</div>
+        <div class="str-row" id="kmp-text-cells"></div>
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+          <div class="result-box"><div>Matches</div><div class="result-val" id="kmp-count">—</div></div>
+          <div class="result-box" style="flex:1;"><div>Match Positions (0-indexed)</div><div id="kmp-positions" style="font-family:'Cinzel',serif;font-size:12px;color:var(--green);margin-top:6px;letter-spacing:1px;">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Time O(n+m)</span><span class="badge time">Space O(m)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="kmp-log"></div></div>
+    </div>
+
+    <!-- Z ALGORITHM -->
+    <div id="sec-zfunc" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Z-Algorithm</div>
+        <p class="desc">Z[i] = length of the longest substring starting at i that matches a prefix of the string. Build in O(n) using a sliding window [L, R].</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">String</div><input class="spell-input" id="z-str" value="AABXAABXCAABXAABX" style="min-width:240px;"></div>
+          <button class="btn btn-cast" onclick="zAuto(event)">✦ Cast</button>
+          <button class="btn btn-reset" onclick="zReset()">Reset</button>
+          <div class="speed-wrap">🐢<input type="range" id="z-speed" min="100" max="1500" value="700" step="50">🐇</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Z-Array Visualization</div>
+        <div class="str-row" id="z-cells"></div>
+        <div style="margin-top:12px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div class="result-box"><div>Current Window [L, R]</div><div class="result-val" id="z-window">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Time O(n)</span><span class="badge time">Space O(n)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="z-log"></div></div>
+    </div>
+
+    <!-- STRING HASHING -->
+    <div id="sec-strhash" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">String Hashing — Polynomial Rolling Hash</div>
+        <p class="desc">H[i] = (H[i-1] × base + ord(s[i])) mod p. Use prefix hashes to get hash of any substring s[l..r] in O(1) via: H[r+1] − H[l]×base^(r−l+1).</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">String</div><input class="spell-input" id="sh-str" value="ABRACADABRA" style="min-width:160px;"></div>
+          <div class="input-group"><div class="input-label">Base</div><input class="spell-input sm" id="sh-base" type="number" value="31" style="width:70px;"></div>
+          <div class="input-group"><div class="input-label">Mod</div><input class="spell-input sm" id="sh-mod" type="number" value="1000000007" style="min-width:130px;"></div>
+          <button class="btn btn-cast" onclick="shRun(event)">✦ Hash</button>
+          <button class="btn btn-reset" onclick="shReset()">Reset</button>
+        </div>
+        <div class="input-row" style="margin-top:10px;">
+          <div class="input-group"><div class="input-label">Query [l, r]  l=</div><input class="spell-input sm" id="sh-l" type="number" value="0" style="width:70px;"></div>
+          <div class="input-group"><div class="input-label">r=</div><input class="spell-input sm" id="sh-r" type="number" value="4" style="width:70px;"></div>
+          <button class="btn btn-step" onclick="shQuery()">Get Hash[l,r]</button>
+          <button class="btn btn-step" onclick="shFindDups()">Find Duplicate Substrings (len=3)</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Prefix Hash Values</div>
+        <div class="str-row" id="sh-cells"></div>
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+          <div class="result-box"><div>hash(s[l..r])</div><div class="result-val" id="sh-query-result">—</div></div>
+          <div class="result-box" style="flex:1;"><div>Duplicate Substrings Found</div><div id="sh-dups" style="font-family:'Cinzel',serif;font-size:12px;color:var(--green);margin-top:6px;letter-spacing:1px;">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Build O(n)</span><span class="badge time">Query O(1)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="sh-log"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Starfield ──────────────────────────────────────────────
+const bgC=document.getElementById('bgCanvas'),bgX=bgC.getContext('2d');let bgStars=[];
+function bgResize(){bgC.width=innerWidth;bgC.height=innerHeight;bgStars=Array.from({length:180},()=>({x:Math.random()*bgC.width,y:Math.random()*bgC.height,r:Math.random()*1.2+0.2,a:Math.random(),s:0.003+Math.random()*0.005}));}
+bgResize();window.addEventListener('resize',()=>{bgResize();resizeTreeCanvases();});
+(function animBg(){bgX.clearRect(0,0,bgC.width,bgC.height);bgStars.forEach(s=>{s.a+=s.s;if(s.a>1||s.a<0)s.s*=-1;bgX.beginPath();bgX.arc(s.x,s.y,s.r,0,Math.PI*2);bgX.fillStyle=`rgba(201,168,76,${s.a*0.7})`;bgX.fill();});requestAnimationFrame(animBg);})();
+
+// ── Magic Spark Effect ─────────────────────────────────────
+const spkC=document.getElementById('sparkCanvas'),spkX=spkC.getContext('2d');
+let sparks=[];
+function resizeSpk(){spkC.width=innerWidth;spkC.height=innerHeight;}resizeSpk();window.addEventListener('resize',resizeSpk);
+function spawnBurst(x,y){
+  const colors=['#c9a84c','#f0c96e','#f472b6','#ec4899','#10b981','#8b5cf6','#60a5fa'];
+  for(let i=0;i<26;i++){
+    const angle=Math.random()*Math.PI*2,speed=Math.random()*6+2;
+    sparks.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-2,life:1,decay:0.024+Math.random()*0.016,r:Math.random()*5+2,color:colors[i%colors.length]});
+  }
+}
+(function animSpk(){spkX.clearRect(0,0,spkC.width,spkC.height);sparks=sparks.filter(p=>p.life>0);sparks.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.1;p.life-=p.decay;spkX.beginPath();spkX.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);spkX.fillStyle=p.color+Math.floor(p.life*255).toString(16).padStart(2,'0');spkX.fill();});requestAnimationFrame(animSpk);})();
+function castEffect(e){if(e&&e.currentTarget){const r=e.currentTarget.getBoundingClientRect();spawnBurst(r.left+r.width/2,r.top+r.height/2);}else if(e&&e.clientX)spawnBurst(e.clientX,e.clientY);}
+
+// ── Sound System ──────────────────────────────────────────
+let _ac=null;
+function ac(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return _ac;}
+function tone(f,t='sine',d=0.15,v=0.18,dl=0){
+  try{const ctx=ac();if(!ctx)return;if(ctx.state==='suspended')ctx.resume();
+    const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=t;
+    o.frequency.setValueAtTime(f,ctx.currentTime+dl);g.gain.setValueAtTime(v,ctx.currentTime+dl);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dl+d);
+    o.start(ctx.currentTime+dl);o.stop(ctx.currentTime+dl+d+0.05);
+  }catch(e){}
+}
+function sndClick(){tone(880,'sine',0.07,0.18);}
+function sndStep(){tone(500,'triangle',0.09,0.1);}
+function sndFound(){[523,659,784,1047].forEach((f,i)=>tone(f,'sine',0.28,0.22,i*0.08));}
+function sndWarn(){tone(220,'sawtooth',0.14,0.14);}
+function sndPop(){tone(660,'sine',0.06,0.12);}
+
+// ── Utils ─────────────────────────────────────────────────
+function spd(id){return Math.max(80,1600-parseInt(document.getElementById(id).value||900));}
+let _tdfsAbort=false,_kmpAbort=false,_zAbort=false;
+function stopAll(){_tdfsAbort=true;_kmpAbort=true;_zAbort=true;}
+function showAlgo(id,btn){
+  stopAll();
+  document.querySelectorAll('.algo-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.algo-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');sndClick();
+}
+function logAdd(id,msg,cls=''){
+  const b=document.getElementById(id);if(!b)return;
+  const e=document.createElement('div');e.className='log-entry '+(cls||'');e.textContent=msg;b.prepend(e);
+  while(b.children.length>50)b.lastChild.remove();
+  if(cls==='found-msg')sndFound();else if(cls==='warn')sndWarn();else sndPop();
+}
+function logClear(id){const b=document.getElementById(id);if(b)b.innerHTML='';}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ══════ TREE ENGINE ══════════════════════════════════════════
+function parseEdges(edgeStr){
+  const adj={};
+  edgeStr.split(',').forEach(e=>{
+    const p=e.trim().split('-');if(p.length<2)return;
+    const u=parseInt(p[0]),v=parseInt(p[1]);if(isNaN(u)||isNaN(v))return;
+    if(!adj[u])adj[u]=[];if(!adj[v])adj[v]=[];
+    adj[u].push(v);adj[v].push(u);
+  });
+  return adj;
+}
+
+function layoutTree(adj,root){
+  const pos={},depth={},parent={},children={},order=[];
+  const q=[root];parent[root]=-1;depth[root]=0;const visited=new Set([root]);
+  while(q.length){
+    const u=q.shift();order.push(u);children[u]=[];
+    (adj[u]||[]).forEach(v=>{if(!visited.has(v)){visited.add(v);parent[v]=u;depth[v]=depth[u]+1;children[u].push(v);q.push(v);}});
+  }
+  // Assign x positions using post-order leaf counting
+  const xCount={};let leafX=0;
+  function assignX(u){
+    if(children[u].length===0){xCount[u]=leafX++;return;}
+    children[u].forEach(v=>assignX(v));
+    xCount[u]=(xCount[children[u][0]]+xCount[children[u][children[u].length-1]])/2;
+  }
+  assignX(root);
+  const maxLeaf=Math.max(...Object.values(xCount));
+  const maxDepth=Math.max(...Object.values(depth));
+  return{pos:xCount,depth,parent,children,order,maxLeaf,maxDepth};
+}
+
+function getCanvasW(canvasId){
+  const c=document.getElementById(canvasId);if(!c)return 700;
+  const wrap=c.parentElement;return wrap?Math.max(300,wrap.clientWidth):700;
+}
+
+function resizeTreeCanvases(){
+  ['tree-canvas','subtree-canvas'].forEach(id=>{
+    const c=document.getElementById(id);if(!c)return;
+    c.width=getCanvasW(id);
+  });
+}
+
+function drawTree(canvasId,adj,root,stateMap,labelMap){
+  const c=document.getElementById(canvasId);if(!c)return null;
+  c.width=getCanvasW(canvasId);
+  const ctx=c.getContext('2d');const W=c.width,H=c.height;
+  ctx.clearRect(0,0,W,H);
+  const layout=layoutTree(adj,root);
+  const{pos,depth,parent,children,order,maxLeaf,maxDepth}=layout;
+  const margin=28;
+  // Map leaf index to pixel x
+  function px(u){return margin+(W-2*margin)*(pos[u]/(Math.max(maxLeaf,1)));}
+  function py(u){return margin+(H-2*margin)*(depth[u]/Math.max(maxDepth,1));}
+  // Draw edges
+  order.forEach(u=>{
+    if(parent[u]===-1)return;
+    const p=parent[u];
+    ctx.beginPath();ctx.moveTo(px(p),py(p));ctx.lineTo(px(u),py(u));
+    ctx.strokeStyle='rgba(44,44,90,1)';ctx.lineWidth=2;ctx.stroke();
+  });
+  const nodeR=Math.min(20,Math.max(12,Math.floor((W-2*margin)/(Math.max(maxLeaf,1)*2.5))));
+  // Draw nodes
+  order.forEach(u=>{
+    const x=px(u),y=py(u);
+    const state=stateMap?stateMap[u]:'default';
+    const colors={
+      default:['rgba(20,20,56,1)','rgba(44,44,90,1)','#d0c4a0'],
+      current:['rgba(201,168,76,0.25)','#c9a84c','#f0c96e'],
+      visited:['rgba(16,185,129,0.18)','#10b981','#34d399'],
+      queued:['rgba(59,130,246,0.18)','#3b82f6','#93c5fd'],
+      done:['rgba(244,114,182,0.15)','#f472b6','#f9a8d4'],
+      root:['rgba(139,92,246,0.22)','#8b5cf6','#c084fc']
+    };
+    const[fill,stroke,textC]=colors[state]||colors.default;
+    ctx.beginPath();ctx.arc(x,y,nodeR,0,Math.PI*2);
+    ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.fill();ctx.stroke();
+    ctx.fillStyle=textC;ctx.font=`bold ${Math.max(10,nodeR-4)}px 'Cinzel',serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(u,x,y);
+    // Labels (subtree size, depth)
+    if(labelMap&&labelMap[u]){
+      ctx.fillStyle='rgba(244,114,182,0.85)';ctx.font=`bold 9px 'Cinzel',serif`;
+      ctx.fillText(labelMap[u],x,y+nodeR+8);
+    }
+  });
+  return{px,py,order};
+}
+
+// ══════ TREE DFS ══════════════════════════════════════════════
+let tdfsAdj={},tdfsRoot=1,tdfsStateMap={};
+
+function tdfsInit(){
+  const edgeStr=document.getElementById('tdfs-edges').value;
+  tdfsRoot=parseInt(document.getElementById('tdfs-root').value)||1;
+  tdfsAdj=parseEdges(edgeStr);tdfsStateMap={};tdfsStateMap[tdfsRoot]='root';
+  drawTree('tree-canvas',tdfsAdj,tdfsRoot,tdfsStateMap,null);
+  logAdd('tdfs-log','🌳 Tree built. Select traversal and Cast.');
+}
+function tdfsReset(){
+  _tdfsAbort=true;
+  setTimeout(()=>{
+    tdfsStateMap={};tdfsStateMap[tdfsRoot]='root';
+    drawTree('tree-canvas',tdfsAdj,tdfsRoot,tdfsStateMap,null);
+    document.getElementById('tdfs-order').textContent='—';
+    logClear('tdfs-log');
+  },50);
+}
+async function tdfsAuto(e){
+  castEffect(e);stopAll();_tdfsAbort=false;
+  if(!Object.keys(tdfsAdj).length)tdfsInit();
+  const mode=document.getElementById('tdfs-mode').value;
+  const delay=spd('tdfs-speed');
+  const order=[];const stateMap={};stateMap[tdfsRoot]='root';
+  const adj=tdfsAdj,root=tdfsRoot;const visited=new Set();
+  logClear('tdfs-log');logAdd('tdfs-log',`🌳 ${mode==='bfs'?'BFS':mode==='pre'?'Pre-order':'Post-order'} traversal from node ${root}`);
+
+  if(mode==='bfs'){
+    const q=[root];visited.add(root);stateMap[root]='current';
+    while(q.length&&!_tdfsAbort){
+      const u=q.shift();order.push(u);stateMap[u]='visited';
+      drawTree('tree-canvas',adj,root,stateMap,null);
+      logAdd('tdfs-log',`Visit ${u}`,'highlight');
+      document.getElementById('tdfs-order').textContent=order.join(' → ');
+      sndStep();await sleep(delay);
+      (adj[u]||[]).forEach(v=>{if(!visited.has(v)){visited.add(v);stateMap[v]='queued';q.push(v);}});
+    }
+  } else {
+    // Iterative DFS to avoid stack overflow
+    const dfs=async(u,par)=>{
+      if(_tdfsAbort)return;
+      visited.add(u);
+      if(mode==='pre'){order.push(u);stateMap[u]='current';drawTree('tree-canvas',adj,root,stateMap,null);logAdd('tdfs-log',`Pre-visit ${u}`,'highlight');document.getElementById('tdfs-order').textContent=order.join(' → ');sndStep();await sleep(delay);}
+      for(const v of(adj[u]||[])){if(v!==par&&!visited.has(v)){stateMap[v]='queued';await dfs(v,u);if(_tdfsAbort)return;}}
+      if(mode==='post'){order.push(u);stateMap[u]='current';drawTree('tree-canvas',adj,root,stateMap,null);logAdd('tdfs-log',`Post-visit ${u}`,'highlight');document.getElementById('tdfs-order').textContent=order.join(' → ');sndStep();await sleep(delay);}
+      stateMap[u]='done';
+    };
+    await dfs(root,-1);
+  }
+  if(!_tdfsAbort){
+    drawTree('tree-canvas',adj,root,stateMap,null);
+    logAdd('tdfs-log',`✨ ${mode} order: ${order.join(' → ')}`,'found-msg');
+  }
+}
+
+// ══════ SUBTREE SIZE & DEPTH ══════════════════════════════════
+function subtreeReset(){
+  const c=document.getElementById('subtree-canvas');if(c){c.width=getCanvasW('subtree-canvas');c.getContext('2d').clearRect(0,0,c.width,c.height);}
+  document.getElementById('subtree-info').innerHTML='';logClear('sub-log2');
+}
+function subtreeRun(e){
+  castEffect(e);subtreeReset();
+  const adj=parseEdges(document.getElementById('sub-edges').value);
+  const root=parseInt(document.getElementById('sub-root').value)||1;
+  if(!adj[root]&&Object.keys(adj).length===0){logAdd('sub-log2','⚠ Invalid edges','warn');return;}
+  const sz={},dep={},parentMap={};const visited=new Set();const postOrder=[];
+  // Iterative DFS for post-order
+  const stack=[{u:root,p:-1,done:false}];dep[root]=0;
+  while(stack.length){
+    const top=stack[stack.length-1];
+    const{u,p}=top;
+    if(!top.done){
+      top.done=true;if(visited.has(u)){stack.pop();continue;}
+      visited.add(u);parentMap[u]=p;
+      (adj[u]||[]).forEach(v=>{if(v!==p){dep[v]=dep[u]+1;stack.push({u:v,p:u,done:false});}});
+    } else {
+      stack.pop();postOrder.push(u);
+    }
+  }
+  // Compute sizes in post-order (already reversed since stack)
+  postOrder.forEach(u=>{sz[u]=1+(adj[u]||[]).filter(v=>v!==parentMap[u]).reduce((acc,v)=>acc+(sz[v]||0),0);});
+  // Build label map
+  const labelMap={};Object.keys(sz).forEach(u=>{labelMap[parseInt(u)]=`s:${sz[u]} d:${dep[u]}`;});
+  const stateMap={};stateMap[root]='root';
+  drawTree('subtree-canvas',adj,root,stateMap,labelMap);
+  // Info panel
+  const info=document.getElementById('subtree-info');info.innerHTML='';
+  // Display in BFS order for readability
+  const bfsOrder=[];const bfsQ=[root];const bfsV=new Set([root]);
+  while(bfsQ.length){const u=bfsQ.shift();bfsOrder.push(u);(adj[u]||[]).forEach(v=>{if(!bfsV.has(v)&&v!==parentMap[u]){bfsV.add(v);bfsQ.push(v);}});}
+  bfsOrder.forEach(u=>{
+    const card=document.createElement('div');card.className='tree-node-info';
+    card.innerHTML=`<span class="nval">${u}</span><span class="nlabel">size: ${sz[u]} | depth: ${dep[u]} | parent: ${parentMap[u]===-1?'none':parentMap[u]}</span>`;
+    info.appendChild(card);
+  });
+  logAdd('sub-log2','✨ Subtree sizes and depths computed (post-order DFS)','found-msg');
+  bfsOrder.slice(0,5).forEach(u=>logAdd('sub-log2',`Node ${u}: size=${sz[u]} depth=${dep[u]}`,'highlight'));
+}
+
+// ══════ KMP ══════════════════════════════════════════════════
+function kmpBuildFail(pat){
+  const m=pat.length,fail=new Array(m).fill(0);
+  let k=0;
+  for(let i=1;i<m;i++){
+    while(k>0&&pat[k]!==pat[i])k=fail[k-1];
+    if(pat[k]===pat[i])k++;
+    fail[i]=k;
+  }
+  return fail;
+}
+function kmpRenderPat(pat,fail,activeJ=-1){
+  let html='';
+  pat.split('').forEach((c,i)=>{
+    const cls=i===activeJ?'cur':i<activeJ?'match':'';
+    html+=`<div class="str-cell ${cls}"><div class="sc">${c}</div><div class="si">${i}</div><div class="sv">π=${fail[i]}</div></div>`;
+  });
+  document.getElementById('kmp-pat-cells').innerHTML=html;
+}
+function kmpRenderText(text,matchStarts,curI=-1){
+  let html='';
+  const matchSet=new Set();
+  matchStarts.forEach(s=>{for(let k=0;k<kmpPatLen;k++)matchSet.add(s+k);});
+  text.split('').forEach((c,i)=>{
+    let cls=matchSet.has(i)?'match-found':i===curI?'cur':'';
+    html+=`<div class="str-cell ${cls}"><div class="sc">${c}</div><div class="si">${i}</div></div>`;
+  });
+  document.getElementById('kmp-text-cells').innerHTML=html;
+}
+let kmpPatLen=0;
+function kmpReset(){
+  _kmpAbort=true;
+  document.getElementById('kmp-pat-cells').innerHTML='';document.getElementById('kmp-text-cells').innerHTML='';
+  document.getElementById('kmp-count').textContent='—';document.getElementById('kmp-positions').textContent='—';
+  logClear('kmp-log');kmpPatLen=0;
+}
+async function kmpAuto(e){
+  castEffect(e);stopAll();_kmpAbort=false;
+  const text=document.getElementById('kmp-text').value.trim().toUpperCase();
+  const pat=document.getElementById('kmp-pat').value.trim().toUpperCase();
+  if(!text||!pat){logAdd('kmp-log','⚠ Enter text and pattern','warn');return;}
+  kmpPatLen=pat.length;
+  const fail=kmpBuildFail(pat);
+  kmpRenderPat(pat,fail);
+  logAdd('kmp-log',`🔮 Text: "${text}" | Pattern: "${pat}"`);
+  logAdd('kmp-log',`Failure function: [${fail.join(', ')}]`,'highlight');
+  const delay=spd('kmp-speed');
+  const n=text.length,m=pat.length;
+  let j=0;const matches=[];
+  for(let i=0;i<n&&!_kmpAbort;i++){
+    while(j>0&&pat[j]!==text[i])j=fail[j-1];
+    if(pat[j]===text[i])j++;
+    kmpRenderText(text,matches,i);
+    kmpRenderPat(pat,fail,j-1);
+    sndStep();await sleep(delay);
+    if(j===m){
+      const start=i-m+1;matches.push(start);j=fail[j-1];
+      kmpRenderText(text,matches,i);
+      logAdd('kmp-log',`✨ Match found at index ${start} (text[${start}..${i}])`,'found-msg');
+      await sleep(delay*1.5);
+    }
+  }
+  if(!_kmpAbort){
+    document.getElementById('kmp-count').textContent=matches.length;
+    document.getElementById('kmp-positions').textContent=matches.length?matches.join(', '):'None';
+    logAdd('kmp-log',`Total: ${matches.length} match(es)${matches.length?' at positions: '+matches.join(', '):''}`,matches.length?'found-msg':'warn');
+  }
+}
+
+// ══════ Z ALGORITHM ══════════════════════════════════════════
+function zReset(){
+  _zAbort=true;
+  document.getElementById('z-cells').innerHTML='';document.getElementById('z-window').textContent='—';
+  logClear('z-log');
+}
+function zRenderCells(s,Z,cur,L,R){
+  let html='';
+  s.split('').forEach((c,i)=>{
+    let cls='';
+    if(i===0)cls='prefix';
+    else if(i===cur)cls='cur';
+    else if(Z[i]>0)cls='match';
+    const zVal=Z[i]!==undefined?`Z:${Z[i]}`:'';
+    html+=`<div class="str-cell ${cls}"><div class="sc">${c}</div><div class="si">${i}</div><div class="sv">${zVal}</div></div>`;
+  });
+  document.getElementById('z-cells').innerHTML=html;
+  document.getElementById('z-window').textContent=`L=${L}, R=${R}`;
+}
+async function zAuto(e){
+  castEffect(e);stopAll();_zAbort=false;
+  const s=document.getElementById('z-str').value.trim().toUpperCase();
+  if(!s){logAdd('z-log','⚠ Enter a string','warn');return;}
+  const n=s.length;const Z=new Array(n).fill(0);Z[0]=n;
+  let L=0,R=0;
+  const delay=spd('z-speed');
+  logAdd('z-log',`🔮 Z-array for "${s}" (length ${n})`);
+  logAdd('z-log',`Z[0] = n = ${n} (entire string matches prefix)`,'highlight');
+  zRenderCells(s,Z,0,L,R);await sleep(delay);
+  for(let i=1;i<n&&!_zAbort;i++){
+    // Core Z-algo logic
+    if(i<R){Z[i]=Math.min(R-i,Z[i-L]);}
+    // Extend naively
+    while(i+Z[i]<n&&s[Z[i]]===s[i+Z[i]])Z[i]++;
+    // Update window if extended past R
+    if(i+Z[i]>R){L=i;R=i+Z[i];}
+    zRenderCells(s,Z,i,L,R);
+    logAdd('z-log',`Z[${i}]=${Z[i]}  window=[${L},${R}]`,Z[i]>0?'highlight':'');
+    sndStep();await sleep(delay);
+  }
+  if(!_zAbort){
+    zRenderCells(s,Z,-1,L,R);
+    logAdd('z-log',`✨ Z-array: [${Z.join(', ')}]`,'found-msg');
+  }
+}
+
+// ══════ STRING HASHING ════════════════════════════════════════
+let shPrefix=[],shStr='',shPow=[];
+function shReset(){
+  shPrefix=[];shStr='';shPow=[];
+  document.getElementById('sh-cells').innerHTML='';
+  document.getElementById('sh-query-result').textContent='—';
+  document.getElementById('sh-dups').textContent='—';
+  logClear('sh-log');
+}
+function shRun(e){
+  castEffect(e);shReset();
+  const s=document.getElementById('sh-str').value.trim().toUpperCase();
+  if(!s){logAdd('sh-log','⚠ Enter a string','warn');return;}
+  const base=BigInt(parseInt(document.getElementById('sh-base').value)||31);
+  const mod=BigInt(parseInt(document.getElementById('sh-mod').value)||1000000007);
+  shStr=s;const n=s.length;
+  shPrefix=new Array(n+1).fill(0n);shPow=new Array(n+1).fill(1n);
+  // H[i+1] = H[i]*base + (ord(s[i]) - ord('A') + 1)
+  for(let i=0;i<n;i++){
+    shPrefix[i+1]=(shPrefix[i]*base+BigInt(s.charCodeAt(i)-64))%mod;
+    shPow[i+1]=shPow[i]*base%mod;
+  }
+  let html='';
+  s.split('').forEach((c,i)=>{
+    const h=shPrefix[i+1].toString();const short=h.length>6?h.slice(0,5)+'…':h;
+    html+=`<div class="str-cell hash-val"><div class="sc">${c}</div><div class="si">${i}</div><div class="sv" style="font-size:8px;">${short}</div></div>`;
+  });
+  document.getElementById('sh-cells').innerHTML=html;
+  logAdd('sh-log',`🔮 Hashed "${s}" | base=${base} mod=${mod}`,'highlight');
+  logAdd('sh-log',`H[${n}] = ${shPrefix[n]}`,'found-msg');
+}
+// Hash of s[l..r] inclusive = (H[r+1] - H[l]*pow[r-l+1]) mod p
+function shGetHash(l,r){
+  const mod=BigInt(parseInt(document.getElementById('sh-mod').value)||1000000007);
+  return((shPrefix[r+1]-shPrefix[l]*shPow[r-l+1]%mod)+mod*2n)%mod;
+}
+function shQuery(){
+  if(!shPrefix.length){logAdd('sh-log','⚠ Build hash first','warn');return;}
+  const l=parseInt(document.getElementById('sh-l').value)||0;
+  const r=parseInt(document.getElementById('sh-r').value)||0;
+  if(l<0||r>=shStr.length||l>r){logAdd('sh-log','⚠ Invalid range [l,r]','warn');return;}
+  const h=shGetHash(l,r);
+  document.getElementById('sh-query-result').textContent=h.toString().slice(0,12)+(h.toString().length>12?'…':'');
+  logAdd('sh-log',`hash(s[${l}..${r}]) = hash("${shStr.slice(l,r+1)}") = ${h}`,'found-msg');
+  // Highlight
+  let html='';
+  shStr.split('').forEach((c,i)=>{
+    const cls=(i>=l&&i<=r)?'match':'hash-val';
+    const hval=shPrefix[i+1].toString();const short=hval.length>6?hval.slice(0,5)+'…':hval;
+    html+=`<div class="str-cell ${cls}"><div class="sc">${c}</div><div class="si">${i}</div><div class="sv" style="font-size:8px;">${short}</div></div>`;
+  });
+  document.getElementById('sh-cells').innerHTML=html;
+}
+function shFindDups(){
+  if(!shPrefix.length){logAdd('sh-log','⚠ Build hash first','warn');return;}
+  const len=3;const n=shStr.length;
+  if(n<len){logAdd('sh-log','⚠ String too short for length-3 substrings','warn');return;}
+  const seen=new Map();const dups=[];
+  for(let i=0;i<=n-len;i++){
+    const h=shGetHash(i,i+len-1).toString();
+    const sub=shStr.slice(i,i+len);
+    if(seen.has(h)){if(!dups.some(d=>d.includes(sub)))dups.push(`"${sub}" at [${seen.get(h)},${i}]`);}
+    else seen.set(h,i);
+  }
+  document.getElementById('sh-dups').textContent=dups.length?dups.join(' | '):'None found';
+  logAdd('sh-log',dups.length?`✨ Duplicates (len=3): ${dups.join(', ')}`:'No length-3 duplicates found',dups.length?'found-msg':'warn');
+}
+
+// Auto-init on load
+window.addEventListener('load',()=>{
+  resizeTreeCanvases();
+  tdfsInit();
+  setTimeout(()=>tdfsAuto({currentTarget:{getBoundingClientRect:()=>({left:0,top:0,width:0,height:0})}}),600);
+});
+</script>
+</body>
+</html>

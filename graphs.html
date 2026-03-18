@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graph Enchantments — AlgoGrimoire</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --void: #05050f;
+      --deep: #09091d;
+      --card: #141438;
+      --card2: #1a1a45;
+      --gold: #c9a84c;
+      --gold-bright: #f0c96e;
+      --parchment: #f0e0b8;
+      --text: #d0c4a0;
+      --text-dim: #9a8a6a;
+      --border: #22224a;
+      --green: #10b981;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --pink: #f472b6;
+      --cyan: #06b6d4;
+    }
+
+    body {
+      background: var(--void);
+      color: var(--text);
+      font-family: 'Crimson Text', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    canvas.bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(5, 5, 15, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-logo {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 16px;
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    .nav-back {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .nav-back:hover {
+      color: var(--blue);
+    }
+
+    .nav-sep {
+      color: var(--border);
+    }
+
+    .nav-current {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--blue);
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .nav-link {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      text-decoration: none;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border: 1px solid transparent;
+      border-radius: 20px;
+      transition: all 0.3s;
+    }
+
+    .nav-link:hover {
+      color: var(--gold);
+      border-color: var(--border);
+    }
+
+    .page-header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 48px 40px 32px;
+    }
+
+    .page-badge {
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 5px;
+      color: var(--blue);
+      text-transform: uppercase;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 5px 18px;
+      border-radius: 30px;
+      background: rgba(59, 130, 246, 0.06);
+      margin-bottom: 16px;
+    }
+
+    .page-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(32px, 5vw, 56px);
+      color: var(--gold);
+      text-shadow: 0 0 40px rgba(201, 168, 76, 0.4);
+      margin-bottom: 8px;
+    }
+
+    .page-sub {
+      font-size: 16px;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .divider {
+      width: 180px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      margin: 20px auto;
+      opacity: 0.5;
+    }
+
+    .main-layout {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 24px;
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0 32px 60px;
+    }
+
+    @media(max-width:800px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sidebar {
+      height: fit-content;
+      position: sticky;
+      top: 80px;
+    }
+
+    .sidebar-title {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      padding: 0 0 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .algo-btn {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .algo-btn:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .algo-btn.active {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: var(--blue);
+    }
+
+    .algo-btn .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .sim-area {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, var(--card), var(--card2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .panel-title {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title::before {
+      content: '';
+      width: 20px;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.5;
+    }
+
+    .algo-desc {
+      background: rgba(201, 168, 76, 0.04);
+      border: 1px solid rgba(201, 168, 76, 0.15);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-style: italic;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+
+    .algo-desc strong {
+      color: var(--gold);
+      font-style: normal;
+    }
+
+    .complexity {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .complex-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: rgba(59, 130, 246, 0.08);
+      color: var(--blue);
+    }
+
+    .btn {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-cast {
+      background: linear-gradient(135deg, #1e3a8a, var(--blue));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-cast:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-step {
+      background: rgba(201, 168, 76, 0.12);
+      border: 1px solid rgba(201, 168, 76, 0.3);
+      color: var(--gold);
+    }
+
+    .btn-step:hover {
+      background: rgba(201, 168, 76, 0.2);
+    }
+
+    .btn-reset {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: var(--red);
+    }
+
+    .btn-reset:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-pause {
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      color: var(--purple);
+    }
+
+    .btn-pause:hover {
+      background: rgba(139, 92, 246, 0.2);
+    }
+
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-label {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .spell-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: var(--text);
+      font-family: 'Crimson Text', serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .spell-input:focus {
+      border-color: var(--blue);
+    }
+
+    .speed-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    input[type=range] {
+      width: 90px;
+      accent-color: var(--gold);
+    }
+
+    .canvas-wrap {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    .graph-canvas {
+      width: 100%;
+      display: block;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--border);
+      cursor: crosshair;
+    }
+
+    .canvas-hint {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--blue);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(59, 130, 246, 0.15);
+      background: rgba(59, 130, 246, 0.06);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .struct-display {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-height: 44px;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .struct-item {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 700;
+      animation: popIn 0.25s ease;
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .log {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      max-height: 130px;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .log-entry {
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .log-entry:last-child {
+      border: none;
+    }
+
+    .log-entry.highlight {
+      color: var(--green);
+    }
+
+    .log-entry.warn {
+      color: var(--amber);
+    }
+
+    .log-entry.found-msg {
+      color: #c084fc;
+    }
+
+    .log .time {
+      color: var(--text-dim);
+      font-size: 12px;
+      margin-right: 8px;
+    }
+
+    .info-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .info-badge {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+
+    .info-badge span {
+      color: var(--gold);
+      font-size: 16px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .dist-table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .dist-table th,
+    .dist-table td {
+      padding: 7px 12px;
+      text-align: center;
+      border: 1px solid var(--border);
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+    }
+
+    .dist-table th {
+      color: var(--gold);
+      background: rgba(201, 168, 76, 0.08);
+    }
+
+    .dist-table td {
+      color: var(--text-dim);
+    }
+
+    .dist-table td.upd {
+      color: var(--green);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .dist-table td.curr {
+      color: var(--blue);
+      background: rgba(59, 130, 246, 0.12);
+    }
+
+    .dist-table td.sett {
+      color: #c084fc;
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .topo-order {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-height: 44px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .topo-node {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      background: rgba(139, 92, 246, 0.2);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      color: #c084fc;
+      animation: popIn 0.3s ease;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 5px 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+
+    .status-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    .algo-panel {
+      display: none;
+    }
+
+    .algo-panel.active {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas class="bg" id="bg"></canvas>
+  <nav>
+    <a class="nav-logo" href="index.html">⚡ AlgoGrimoire</a>
+    <span class="nav-sep">›</span><a class="nav-back" href="index.html">Chapters</a>
+    <span class="nav-sep">›</span><span class="nav-current">Graph Enchantments</span>
+    <div class="nav-links">
+      <a class="nav-link" href="arrays.html">Arrays</a>
+      <a class="nav-link" href="dp.html">DP</a>
+      <a class="nav-link" href="ds.html">DS</a>
+      <a class="nav-link" href="math.html">Math</a>
+      <a class="nav-link" href="trees.html">Trees</a>
+    </div>
+  </nav>
+  <div class="page-header">
+    <div class="page-badge">Chapter II — Graph Enchantments</div>
+    <h1 class="page-title">🌐 Graph Enchantments</h1>
+    <p class="page-sub">Navigate the Forbidden Forest of vertices and edges</p>
+    <div class="divider"></div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-title">Spell Index</div>
+      <button class="algo-btn active" onclick="showAlgo('bfs');sndClick()"><span class="dot"></span>BFS</button>
+      <button class="algo-btn" onclick="showAlgo('dfs');sndClick()"><span class="dot"></span>DFS</button>
+      <button class="algo-btn" onclick="showAlgo('dijkstra');sndClick()"><span class="dot"></span>Dijkstra</button>
+      <button class="algo-btn" onclick="showAlgo('toposort');sndClick()"><span class="dot"></span>Topological
+        Sort</button>
+      <button class="algo-btn" onclick="showAlgo('bipartite');sndClick()"><span class="dot"></span>Bipartite
+        Check</button>
+      <button class="algo-btn" onclick="showAlgo('components');sndClick()"><span class="dot"></span>Connected
+        Comp.</button>
+    </div>
+    <div class="sim-area">
+
+      <!-- BFS -->
+      <div id="bfs" class="algo-panel active">
+        <div class="panel">
+          <div class="panel-title">✦ Expanding Patronus — BFS</div>
+          <div class="algo-desc">BFS explores nodes <strong>layer by layer</strong> from the source using a FIFO queue.
+            Guarantees the <strong>shortest path</strong> in unweighted graphs. Each level = one more hop from source.
+          </div>
+          <div class="complexity"><span class="complex-badge">⏱ O(V+E)</span><span class="complex-badge">💾 O(V)
+              Queue</span></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Graph Canvas</div>
+          <div class="canvas-hint">🖱 Click empty space → add node &nbsp;|&nbsp; Click node then another → add edge
+            &nbsp;|&nbsp; Click same node again → deselect</div>
+          <div class="canvas-wrap"><canvas id="bfs-canvas" class="graph-canvas" height="340"></canvas></div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3c3c64;border:2px solid #5a5a9a;"></div>Unvisited
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(59,130,246,0.5);border:2px solid var(--blue);"></div>Start
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(245,158,11,0.5);border:2px solid var(--amber);"></div>In
+              Queue
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(16,185,129,0.5);border:2px solid var(--green);"></div>
+              Visited
+            </div>
+          </div>
+          <div class="input-row" style="margin-top:14px;">
+            <div class="input-group">
+              <div class="input-label">Start Node</div><input class="spell-input" id="bfs-start" value="0"
+                style="width:65px;">
+            </div>
+            <button class="btn btn-cast" onclick="runBFS();sndClick()">⚡ Cast BFS</button>
+            <button class="btn btn-step" onclick="bfsManualStep();sndClick()">→ Step</button>
+            <button class="btn btn-pause" id="bfs-pb" onclick="bfsPause();sndClick()">⏸ Pause</button>
+            <button class="btn btn-reset" onclick="bfsReset();sndClick()">↺ Reset</button>
+            <div class="speed-wrap">🐢<input type="range" id="bfs-spd" min="1" max="10" value="4" step="1">🐇</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Queue State</div>
+          <div class="status-pill">
+            <div class="status-dot" id="bfs-sd"></div><span id="bfs-st">Ready — press Cast BFS</span>
+          </div>
+          <div class="input-label" style="margin-bottom:6px;">QUEUE (front → back)</div>
+          <div class="struct-display" id="bfs-queue"></div>
+          <div class="info-row" style="margin-top:12px;">
+            <div class="info-badge"><span id="bfs-curr">—</span>Processing</div>
+            <div class="info-badge"><span id="bfs-distv">—</span>Distance</div>
+            <div class="info-badge"><span id="bfs-vcount">0</span>Visited</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Spell Log</div>
+          <div class="log" id="bfs-log"></div>
+        </div>
+      </div>
+
+      <!-- DFS -->
+      <div id="dfs" class="algo-panel">
+        <div class="panel">
+          <div class="panel-title">✦ Spiraling Lumos — DFS</div>
+          <div class="algo-desc">DFS plunges <strong>as deep as possible</strong> before backtracking, like Lumos
+            illuminating dark tunnels. Tracks discovery order and recursion depth. Essential for cycle detection and
+            topo sort.</div>
+          <div class="complexity"><span class="complex-badge">⏱ O(V+E)</span><span class="complex-badge">💾 O(V)
+              Stack</span></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Graph Canvas</div>
+          <div class="canvas-hint">🖱 Click empty space → add node &nbsp;|&nbsp; Click two nodes → add edge</div>
+          <div class="canvas-wrap"><canvas id="dfs-canvas" class="graph-canvas" height="340"></canvas></div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3c3c64;border:2px solid #5a5a9a;"></div>Unvisited
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(245,158,11,0.5);border:2px solid var(--amber);"></div>On
+              Stack
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(16,185,129,0.5);border:2px solid var(--green);"></div>
+              Finished
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(59,130,246,0.5);border:2px solid var(--blue);"></div>Start
+            </div>
+          </div>
+          <div class="input-row" style="margin-top:14px;">
+            <div class="input-group">
+              <div class="input-label">Start Node</div><input class="spell-input" id="dfs-start" value="0"
+                style="width:65px;">
+            </div>
+            <button class="btn btn-cast" onclick="runDFS();sndClick()">⚡ Cast DFS</button>
+            <button class="btn btn-step" onclick="dfsManualStep();sndClick()">→ Step</button>
+            <button class="btn btn-pause" id="dfs-pb" onclick="dfsPause();sndClick()">⏸ Pause</button>
+            <button class="btn btn-reset" onclick="dfsReset();sndClick()">↺ Reset</button>
+            <div class="speed-wrap">🐢<input type="range" id="dfs-spd" min="1" max="10" value="4" step="1">🐇</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Call Stack</div>
+          <div class="status-pill">
+            <div class="status-dot" id="dfs-sd"></div><span id="dfs-st">Ready</span>
+          </div>
+          <div class="input-label" style="margin-bottom:6px;">STACK (top first)</div>
+          <div class="struct-display" id="dfs-stack"></div>
+          <div class="info-row" style="margin-top:12px;">
+            <div class="info-badge"><span id="dfs-order">—</span>Visit Order</div>
+            <div class="info-badge"><span id="dfs-depth">0</span>Max Depth</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Spell Log</div>
+          <div class="log" id="dfs-log"></div>
+        </div>
+      </div>
+
+      <!-- DIJKSTRA -->
+      <div id="dijkstra" class="algo-panel">
+        <div class="panel">
+          <div class="panel-title">✦ Shortest Path Curse — Dijkstra</div>
+          <div class="algo-desc">Greedily picks the <strong>closest unsettled node</strong> from a min-heap, then
+            relaxes its neighbors' distances. Like choosing the safest Floo Network route — always take the lowest-cost
+            path first.</div>
+          <div class="complexity"><span class="complex-badge">⏱ O((V+E) log V)</span><span class="complex-badge">💾 O(V)
+              Heap</span></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Weighted Graph Canvas</div>
+          <div class="canvas-hint">🖱 Click empty → add node &nbsp;|&nbsp; Click two nodes → add edge with weight (set
+            below) &nbsp;|&nbsp; Weights shown in gold circles</div>
+          <div class="canvas-wrap"><canvas id="dijk-canvas" class="graph-canvas" height="340"></canvas></div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3c3c64;"></div>Unvisited
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(245,158,11,0.5);border:2px solid var(--amber);"></div>In
+              Heap
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(59,130,246,0.5);border:2px solid var(--blue);"></div>
+              Processing
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(139,92,246,0.5);border:2px solid var(--purple);"></div>
+              Settled
+            </div>
+          </div>
+          <div class="input-row" style="margin-top:14px;">
+            <div class="input-group">
+              <div class="input-label">Edge Weight</div><input class="spell-input" id="dijk-weight" value="5"
+                style="width:65px;">
+            </div>
+            <div class="input-group">
+              <div class="input-label">Source Node</div><input class="spell-input" id="dijk-source" value="0"
+                style="width:65px;">
+            </div>
+            <button class="btn btn-cast" onclick="runDijkstra();sndClick()">⚡ Find Paths</button>
+            <button class="btn btn-step" onclick="dijkManualStep();sndClick()">→ Step</button>
+            <button class="btn btn-pause" id="dijk-pb" onclick="dijkPause();sndClick()">⏸ Pause</button>
+            <button class="btn btn-reset" onclick="dijkReset();sndClick()">↺ Reset</button>
+            <div class="speed-wrap">🐢<input type="range" id="dijk-spd" min="1" max="10" value="3" step="1">🐇</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Distance Table</div>
+          <div class="status-pill">
+            <div class="status-dot" id="dijk-sd"></div><span id="dijk-st">Ready</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="dist-table">
+              <thead>
+                <tr>
+                  <th>Node</th>
+                  <th>Distance</th>
+                  <th>Via</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="dijk-tbody"></tbody>
+            </table>
+          </div>
+          <div class="info-row" style="margin-top:12px;">
+            <div class="info-badge"><span id="dijk-curr">—</span>Processing</div>
+            <div class="info-badge"><span id="dijk-relax">0</span>Relaxed</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Spell Log</div>
+          <div class="log" id="dijk-log"></div>
+        </div>
+      </div>
+
+      <!-- TOPO SORT -->
+      <div id="toposort" class="algo-panel">
+        <div class="panel">
+          <div class="panel-title">✦ Ordering Prophecy — Topological Sort</div>
+          <div class="algo-desc">For a <strong>DAG</strong> (no cycles), find a linear ordering where every edge goes
+            forward. Uses <strong>Kahn's Algorithm</strong>: repeatedly remove nodes with in-degree 0, adding them to
+            the order.</div>
+          <div class="complexity"><span class="complex-badge">⏱ O(V+E)</span><span class="complex-badge">💾 O(V)
+              Queue</span></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Directed Graph Canvas</div>
+          <div class="canvas-hint">🖱 Click empty → add node &nbsp;|&nbsp; Click source then target → add directed edge
+            (arrow shown) &nbsp;|&nbsp; Ensure no cycles!</div>
+          <div class="canvas-wrap"><canvas id="topo-canvas" class="graph-canvas" height="340"></canvas></div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3c3c64;border:2px solid #5a5a9a;"></div>Pending
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(245,158,11,0.5);border:2px solid var(--amber);"></div>In
+              Queue (indeg=0)
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(16,185,129,0.5);border:2px solid var(--green);"></div>Added
+              to Order
+            </div>
+          </div>
+          <div class="input-row" style="margin-top:14px;">
+            <button class="btn btn-cast" onclick="runTopo();sndClick()">⚡ Sort!</button>
+            <button class="btn btn-step" onclick="topoManualStep();sndClick()">→ Step</button>
+            <button class="btn btn-pause" id="topo-pb" onclick="topoPause();sndClick()">⏸ Pause</button>
+            <button class="btn btn-reset" onclick="topoReset();sndClick()">↺ Reset</button>
+            <div class="speed-wrap">🐢<input type="range" id="topo-spd" min="1" max="10" value="4" step="1">🐇</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Topological Order</div>
+          <div class="status-pill">
+            <div class="status-dot" id="topo-sd"></div><span id="topo-st">Ready</span>
+          </div>
+          <div class="input-label" style="margin-bottom:6px;">ZERO-INDEGREE QUEUE</div>
+          <div class="struct-display" id="topo-queue"></div>
+          <div
+            style="margin-top:12px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--purple);margin-bottom:6px;">
+            RESULT ORDER →</div>
+          <div class="topo-order" id="topo-result"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Spell Log</div>
+          <div class="log" id="topo-log"></div>
+        </div>
+      </div>
+
+      <!-- BIPARTITE -->
+      <div id="bipartite" class="algo-panel">
+        <div class="panel">
+          <div class="panel-title">✦ Two Houses Charm — Bipartite Check</div>
+          <div class="algo-desc">Can the graph be <strong>2-colored</strong> (Gryffindor red vs Slytherin blue) so no
+            adjacent nodes share a color? BFS with alternating colors — finding a <strong>conflict means an odd
+              cycle</strong>.</div>
+          <div class="complexity"><span class="complex-badge">⏱ O(V+E)</span><span class="complex-badge">💾 O(V)</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Graph Canvas</div>
+          <div class="canvas-hint">🖱 Click empty → add node &nbsp;|&nbsp; Click two nodes → add edge &nbsp;|&nbsp; Try
+            adding a triangle (odd cycle) to break bipartiteness!</div>
+          <div class="canvas-wrap"><canvas id="bip-canvas" class="graph-canvas" height="340"></canvas></div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(239,68,68,0.5);border:2px solid var(--red);"></div>🔴 House
+              A
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(59,130,246,0.5);border:2px solid var(--blue);"></div>🔵
+              House B
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:rgba(245,158,11,0.6);border:2px solid var(--amber);"></div>⚡
+              Conflict
+            </div>
+          </div>
+          <div class="input-row" style="margin-top:14px;">
+            <button class="btn btn-cast" onclick="runBipartite();sndClick()">⚡ Check</button>
+            <button class="btn btn-step" onclick="bipManualStep();sndClick()">→ Step</button>
+            <button class="btn btn-pause" id="bip-pb" onclick="bipPause();sndClick()">⏸ Pause</button>
+            <button class="btn btn-reset" onclick="bipReset();sndClick()">↺ Reset</button>
+            <div class="speed-wrap">🐢<input type="range" id="bip-spd" min="1" max="10" value="4" step="1">🐇</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Result</div>
+          <div class="status-pill">
+            <div class="status-dot" id="bip-sd"></div><span id="bip-st">Ready</span>
+          </div>
+          <div class="info-badge" style="display:inline-block;margin-bottom:12px;"><span id="bip-result"
+              style="font-size:18px;">—</span>Verdict</div>
+          <div class="log" id="bip-log"></div>
+        </div>
+      </div>
+
+      <!-- COMPONENTS -->
+      <div id="components" class="algo-panel">
+        <div class="panel">
+          <div class="panel-title">✦ Island Mapping Charm — Connected Components</div>
+          <div class="algo-desc">Find all <strong>disconnected islands</strong> of connected nodes via repeated BFS.
+            Each component gets a distinct magical color. Key for flood-fill problems, network analysis, and clustering.
+          </div>
+          <div class="complexity"><span class="complex-badge">⏱ O(V+E)</span><span class="complex-badge">💾 O(V)</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Graph Canvas</div>
+          <div class="canvas-hint">🖱 Click empty → add node &nbsp;|&nbsp; Click two nodes → add edge &nbsp;|&nbsp;
+            Leave some nodes isolated to see multiple components!</div>
+          <div class="canvas-wrap"><canvas id="comp-canvas" class="graph-canvas" height="340"></canvas></div>
+          <div class="input-row" style="margin-top:14px;">
+            <button class="btn btn-cast" onclick="runComponents();sndClick()">⚡ Find All</button>
+            <button class="btn btn-step" onclick="compManualStep();sndClick()">→ Step</button>
+            <button class="btn btn-pause" id="comp-pb" onclick="compPause();sndClick()">⏸ Pause</button>
+            <button class="btn btn-reset" onclick="compReset();sndClick()">↺ Reset</button>
+            <div class="speed-wrap">🐢<input type="range" id="comp-spd" min="1" max="10" value="4" step="1">🐇</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">✦ Components Found</div>
+          <div class="status-pill">
+            <div class="status-dot" id="comp-sd"></div><span id="comp-st">Ready</span>
+          </div>
+          <div class="info-badge" style="display:inline-block;margin-bottom:12px;"><span
+              id="comp-count">—</span>Components</div>
+          <div class="log" id="comp-log"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ===== STARFIELD =====
+    (function () {
+      const c = document.getElementById('bg'), x = c.getContext('2d'); let st = [];
+      function r() { c.width = innerWidth; c.height = innerHeight; }
+      function mk() { st = []; for (let i = 0; i < 180; i++)st.push({ x: Math.random() * c.width, y: Math.random() * c.height, r: Math.random() * 1.2 + 0.2, a: Math.random(), da: 0.007 + Math.random() * 0.005, dir: Math.random() > 0.5 ? 1 : -1 }); }
+      function dr() { x.clearRect(0, 0, c.width, c.height); st.forEach(s => { s.a += s.da * s.dir; if (s.a > 1 || s.a < 0.1) s.dir *= -1; x.beginPath(); x.arc(s.x, s.y, s.r, 0, Math.PI * 2); x.fillStyle = `rgba(255,245,210,${s.a})`; x.fill(); }); requestAnimationFrame(dr); }
+      r(); mk(); dr(); window.addEventListener('resize', () => { r(); mk(); });
+    })();
+
+    // ===== SOUND =====
+    let _ac = null;
+    function ac() { if (!_ac) try { _ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } return _ac; }
+    function tone(f, t, d, v, dl) {
+      dl = dl || 0; try {
+        const ctx = ac(); if (!ctx) return; const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination); o.type = t || 'sine';
+        o.frequency.setValueAtTime(f, ctx.currentTime + dl);
+        g.gain.setValueAtTime(v || 0.15, ctx.currentTime + dl);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dl + (d || 0.15));
+        o.start(ctx.currentTime + dl); o.stop(ctx.currentTime + dl + (d || 0.15) + 0.05);
+      } catch (e) { }
+    }
+    function sndClick() { tone(880, 'sine', 0.06, 0.16); }
+    function sndStep() { tone(520, 'triangle', 0.08, 0.1); }
+    function sndFound() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 'sine', 0.25, 0.2, i * 0.07)); }
+    function sndWarn() { tone(220, 'sawtooth', 0.14, 0.14); }
+    function sndEnqueue() { tone(660, 'sine', 0.06, 0.12); }
+    function sndSettle() { tone(440, 'triangle', 0.1, 0.13); }
+
+    // ===== UTILS =====
+    function spd(id) { const v = parseInt(document.getElementById(id).value) || 4; return Math.max(120, 2300 - v * 220); }
+    function logAdd(id, msg, cls) {
+      const l = document.getElementById(id); if (!l) return;
+      const e = document.createElement('div'); e.className = 'log-entry' + (cls ? ' ' + cls : '');
+      const t = new Date().toLocaleTimeString('en', { hour12: false });
+      e.innerHTML = '<span class="time">' + t + '</span>' + msg; l.prepend(e);
+      if (cls === 'found-msg') sndFound(); else if (cls === 'warn') sndWarn(); else sndStep();
+    }
+    function logClear(id) { const l = document.getElementById(id); if (l) l.innerHTML = ''; }
+    function setSt(dotId, stId, text, active) {
+      const d = document.getElementById(dotId), s = document.getElementById(stId);
+      if (d) d.className = 'status-dot' + (active ? ' active' : ''); if (s) s.textContent = text;
+    }
+
+    // ===== GRAPH SIM CLASS =====
+    class GraphSim {
+      constructor(canvasId, directed) {
+        this.canvasId = canvasId;
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.nodes = []; this.edges = []; this.directed = directed || false;
+        this.sel = null; this.hover = -1;
+        this.ns = {}; this.es = {};
+        this.NR = 22;
+        this.canvas.addEventListener('click', e => this._click(e));
+        this.canvas.addEventListener('mousemove', e => { const p = this._pos(e); const h = this._hit(p.x, p.y); if (h !== this.hover) { this.hover = h; this.draw(); } });
+        this.canvas.addEventListener('mouseleave', () => { this.hover = -1; this.draw(); });
+      }
+      resize() {
+        const w = this.canvas.parentElement.offsetWidth;
+        if (w > 10) { this.canvas.width = w; this.canvas.height = 340; }
+        this.draw();
+      }
+      _pos(e) { const r = this.canvas.getBoundingClientRect(); const sx = this.canvas.width / r.width; const sy = this.canvas.height / r.height; return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy }; }
+      _hit(x, y) { return this.nodes.findIndex(n => Math.hypot(n.x - x, n.y - y) < this.NR + 7); }
+      _click(e) {
+        sndClick();
+        const p = this._pos(e); const h = this._hit(p.x, p.y);
+        if (h >= 0) {
+          if (this.sel === null) { this.sel = h; }
+          else if (this.sel === h) { this.sel = null; }
+          else {
+            const w = this.canvasId === 'dijk-canvas' ? (parseInt(document.getElementById('dijk-weight').value) || 5) : 1;
+            this._addEdge(this.sel, h, w); this.sel = null; sndEnqueue();
+          }
+        } else {
+          if (this.sel !== null) { this.sel = null; }
+          else { this.nodes.push({ id: this.nodes.length, x: p.x, y: p.y }); }
+        }
+        this.draw();
+      }
+      _addEdge(u, v, w) {
+        if (u === v) return;
+        const dup = this.directed ? this.edges.some(e => e.u === u && e.v === v) : this.edges.some(e => (e.u === u && e.v === v) || (e.u === v && e.v === u));
+        if (!dup) this.edges.push({ u, v, w: w || 1 });
+      }
+      reset() { this.nodes = []; this.edges = []; this.sel = null; this.ns = {}; this.es = {}; this.draw(); }
+      resetStates() { this.ns = {}; this.es = {}; this.sel = null; this.nodes.forEach(n => { delete n.dist; delete n.distLabel; }); this.draw(); }
+      _nodeColor(i) {
+        const s = this.ns[i];
+        if (s === 'start') return ['rgba(59,130,246,0.5)', '#3b82f6'];
+        if (s === 'current') return ['rgba(59,130,246,0.6)', '#60a5fa'];
+        if (s === 'queue' || s === 'stack') return ['rgba(245,158,11,0.5)', '#f59e0b'];
+        if (s === 'visited' || s === 'done' || s === 'topo-done') return ['rgba(16,185,129,0.5)', '#10b981'];
+        if (s === 'settled') return ['rgba(139,92,246,0.5)', '#8b5cf6'];
+        if (s === 'red') return ['rgba(239,68,68,0.5)', '#ef4444'];
+        if (s === 'blue') return ['rgba(59,130,246,0.5)', '#3b82f6'];
+        if (s === 'conflict') return ['rgba(245,158,11,0.65)', '#fbbf24'];
+        if (s && s.startsWith('comp')) {
+          const COLS = [['rgba(16,185,129,0.5)', '#10b981'], ['rgba(59,130,246,0.5)', '#3b82f6'], ['rgba(239,68,68,0.5)', '#ef4444'], ['rgba(245,158,11,0.5)', '#f59e0b'], ['rgba(139,92,246,0.5)', '#8b5cf6'], ['rgba(244,114,182,0.5)', '#f472b6']];
+          return COLS[parseInt(s.replace('comp', '')) % COLS.length];
+        }
+        return ['rgba(50,50,90,0.75)', '#5a5a9a'];
+      }
+      _edgeStyle(u, v) {
+        const k1 = u + '-' + v, k2 = v + '-' + u; const s = this.es[k1] || this.es[k2];
+        if (s === 'active') return ['rgba(245,158,11,0.9)', 3];
+        if (s === 'path') return ['rgba(16,185,129,0.85)', 3];
+        if (s === 'settled') return ['rgba(139,92,246,0.75)', 2.5];
+        return ['rgba(80,80,140,0.4)', 1.5];
+      }
+      draw() {
+        const ctx = this.ctx; ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // edges
+        this.edges.forEach(e => {
+          const a = this.nodes[e.u], b = this.nodes[e.v]; if (!a || !b) return;
+          const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy); if (len < 1) return;
+          const ux = dx / len, uy = dy / len;
+          const [col, lw] = this._edgeStyle(e.u, e.v);
+          ctx.beginPath();
+          ctx.moveTo(a.x + ux * this.NR, a.y + uy * this.NR);
+          ctx.lineTo(b.x - ux * this.NR, b.y - uy * this.NR);
+          ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.stroke();
+          if (this.directed) {
+            const ax = b.x - ux * (this.NR + 2), ay = b.y - uy * (this.NR + 2);
+            const ang = Math.atan2(dy, dx);
+            ctx.beginPath(); ctx.moveTo(ax, ay);
+            ctx.lineTo(ax - 13 * Math.cos(ang - 0.42), ay - 13 * Math.sin(ang - 0.42));
+            ctx.lineTo(ax - 13 * Math.cos(ang + 0.42), ay - 13 * Math.sin(ang + 0.42));
+            ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+          }
+          if (this.canvasId === 'dijk-canvas' && e.w) {
+            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+            ctx.fillStyle = 'rgba(5,5,15,0.9)'; ctx.beginPath(); ctx.arc(mx, my, 13, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(201,168,76,0.4)'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.fillStyle = '#c9a84c'; ctx.font = 'bold 11px Cinzel,serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(e.w, mx, my);
+          }
+        });
+        // selection glow
+        if (this.sel !== null) {
+          const n = this.nodes[this.sel];
+          ctx.beginPath(); ctx.arc(n.x, n.y, this.NR + 10, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,200,0.07)'; ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,200,0.4)'; ctx.lineWidth = 2; ctx.stroke();
+        }
+        // nodes
+        this.nodes.forEach((n, i) => {
+          const [fill, stroke] = this._nodeColor(i);
+          const glow = this.ns[i] ? 20 : (this.hover === i ? 12 : 0);
+          ctx.shadowBlur = glow; ctx.shadowColor = stroke;
+          ctx.beginPath(); ctx.arc(n.x, n.y, this.NR, 0, Math.PI * 2);
+          ctx.fillStyle = fill; ctx.fill();
+          ctx.lineWidth = this.sel === i ? 3 : 2; ctx.strokeStyle = this.sel === i ? '#fff' : stroke; ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#f0e0b8'; ctx.font = 'bold 14px Cinzel,serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(i, n.x, n.y);
+          if (n.distLabel !== undefined) { ctx.fillStyle = '#f0c96e'; ctx.font = 'bold 10px Cinzel,serif'; ctx.fillText(n.distLabel, n.x, n.y - this.NR - 9); }
+        });
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.shadowBlur = 0;
+      }
+      loadPreset(nodes, edges) {
+        this.reset();
+        const W = this.canvas.width || 600, H = 340;
+        nodes.forEach(nd => this.nodes.push({ id: nd.id, x: nd.rx * W, y: nd.ry * H }));
+        edges.forEach(e => this.edges.push({ u: e.u, v: e.v, w: e.w || 1 }));
+        this.draw();
+      }
+    }
+
+    // ===== INSTANCES =====
+    let bfsG, dfsG, dijkG, topoG, bipG, compG;
+
+    // ===== PRESETS =====
+    // Undirected 7-node (for BFS,DFS,Dijkstra,Bipartite preloads)
+    const P_UND = {
+      nodes: [{ id: 0, rx: .11, ry: .5 }, { id: 1, rx: .28, ry: .2 }, { id: 2, rx: .28, ry: .8 }, { id: 3, rx: .5, ry: .5 }, { id: 4, rx: .72, ry: .2 }, { id: 5, rx: .72, ry: .8 }, { id: 6, rx: .89, ry: .5 }],
+      edges: [{ u: 0, v: 1, w: 4 }, { u: 0, v: 2, w: 2 }, { u: 1, v: 2, w: 1 }, { u: 1, v: 3, w: 5 }, { u: 2, v: 3, w: 8 }, { u: 3, v: 4, w: 3 }, { u: 3, v: 5, w: 7 }, { u: 4, v: 5, w: 6 }, { u: 4, v: 6, w: 2 }, { u: 5, v: 6, w: 4 }]
+    };
+    const P_TOPO = {
+      nodes: [{ id: 0, rx: .12, ry: .5 }, { id: 1, rx: .33, ry: .22 }, { id: 2, rx: .33, ry: .78 }, { id: 3, rx: .55, ry: .22 }, { id: 4, rx: .55, ry: .78 }, { id: 5, rx: .78, ry: .5 }],
+      edges: [{ u: 0, v: 1, w: 1 }, { u: 0, v: 2, w: 1 }, { u: 1, v: 3, w: 1 }, { u: 1, v: 4, w: 1 }, { u: 2, v: 4, w: 1 }, { u: 3, v: 5, w: 1 }, { u: 4, v: 5, w: 1 }]
+    };
+    const P_BIP = {
+      nodes: [{ id: 0, rx: .15, ry: .22 }, { id: 1, rx: .15, ry: .5 }, { id: 2, rx: .15, ry: .78 }, { id: 3, rx: .6, ry: .22 }, { id: 4, rx: .6, ry: .5 }, { id: 5, rx: .6, ry: .78 }, { id: 6, rx: .88, ry: .36 }, { id: 7, rx: .88, ry: .64 }],
+      edges: [{ u: 0, v: 3, w: 1 }, { u: 0, v: 4, w: 1 }, { u: 1, v: 3, w: 1 }, { u: 1, v: 5, w: 1 }, { u: 2, v: 4, w: 1 }, { u: 2, v: 5, w: 1 }, { u: 3, v: 6, w: 1 }, { u: 4, v: 7, w: 1 }]
+    };
+    const P_COMP = {
+      nodes: [{ id: 0, rx: .1, ry: .35 }, { id: 1, rx: .2, ry: .18 }, { id: 2, rx: .3, ry: .35 }, { id: 3, rx: .2, ry: .6 }, { id: 4, rx: .5, ry: .28 }, { id: 5, rx: .52, ry: .65 }, { id: 6, rx: .65, ry: .45 }, { id: 7, rx: .82, ry: .25 }, { id: 8, rx: .92, ry: .5 }],
+      edges: [{ u: 0, v: 1, w: 1 }, { u: 1, v: 2, w: 1 }, { u: 2, v: 3, w: 1 }, { u: 3, v: 0, w: 1 }, { u: 4, v: 6, w: 1 }, { u: 5, v: 6, w: 1 }, { u: 7, v: 8, w: 1 }]
+    };
+
+    function getG(name) { const m = { bfs: bfsG, dfs: dfsG, dijkstra: dijkG, toposort: topoG, bipartite: bipG, components: compG }; return m[name]; }
+
+    function loadAndResize(name) {
+      const g = getG(name); if (!g) return;
+      g.resize();
+      const P = { bfs: P_UND, dfs: P_UND, dijkstra: P_UND, toposort: P_TOPO, bipartite: P_BIP, components: P_COMP }[name];
+      if (P) g.loadPreset(P.nodes, P.edges);
+    }
+
+    // ===== SHOW ALGO =====
+    const _timers = {};
+    function stopTimer(n) { if (_timers[n]) { clearInterval(_timers[n]); _timers[n] = null; } }
+    function stopAll() { Object.keys(_timers).forEach(stopTimer); }
+
+    function showAlgo(name) {
+      stopAll();
+      document.querySelectorAll('.algo-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.algo-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(name).classList.add('active');
+      document.querySelectorAll('.algo-btn').forEach(b => { if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + name + "'")) b.classList.add('active'); });
+      setTimeout(() => {
+        loadAndResize(name);
+        setTimeout(() => { ({ bfs: runBFS, dfs: runDFS, dijkstra: runDijkstra, toposort: runTopo, bipartite: runBipartite, components: runComponents }[name] || function () { })(); }, 350);
+      }, 60);
+    }
+
+    // ===== SHARED HELPERS =====
+    function buildAdj(n, edges, directed) {
+      const a = Array.from({ length: n }, () => []);
+      edges.forEach(e => { a[e.u].push({ v: e.v, w: e.w }); if (!directed) a[e.v].push({ v: e.u, w: e.w }); });
+      return a;
+    }
+    function structHTML(arr, style) {
+      return arr.map(x => '<span class="struct-item" style="' + style + '">' + x + '</span>').join('');
+    }
+
+    // ===== BFS =====
+    let bfsSteps = [], bfsSI = 0, bfsDone = false, bfsPaused = false;
+    function genBFS(G, start) {
+      const steps = [], n = G.nodes.length; if (!n || !G.nodes[start]) return steps;
+      const adj = buildAdj(n, G.edges, false), vis = new Set([start]), dist = { [start]: 0 };
+      let ns = { [start]: 'start' }, es = {};
+      const q = [start];
+      steps.push({ ns: { ...ns }, es: { ...es }, q: [...q], curr: start, dv: 0, vc: 1, log: 'BFS from node ' + start, lc: 'highlight' });
+      while (q.length) {
+        const u = q.shift(); ns = { ...ns, [u]: 'current' };
+        steps.push({ ns: { ...ns }, es: { ...es }, q: [...q], curr: u, dv: dist[u], vc: vis.size, log: 'Processing ' + u + ' (dist=' + dist[u] + ')', lc: '' });
+        for (const { v } of adj[u]) {
+          if (!vis.has(v)) {
+            vis.add(v); dist[v] = dist[u] + 1; q.push(v);
+            ns = { ...ns, [v]: 'queue' }; const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'active' };
+            steps.push({ ns: { ...ns }, es: { ...es }, q: [...q], curr: u, dv: dist[u], vc: vis.size, log: 'Enqueue ' + v + ' (dist=' + dist[v] + ')', lc: '' });
+          }
+        }
+        ns = { ...ns, [u]: 'visited' };
+        steps.push({ ns: { ...ns }, es: { ...es }, q: [...q], curr: u, dv: dist[u], vc: vis.size, log: 'Marked ' + u + ' visited', lc: '' });
+      }
+      steps.push({ ...steps[steps.length - 1], q: [], log: '✨ BFS complete! Visited ' + vis.size + '/' + n + ' nodes', lc: 'found-msg', done: true });
+      return steps;
+    }
+    function runBFS() {
+      stopTimer('bfs'); const s = parseInt(document.getElementById('bfs-start').value) || 0;
+      bfsSteps = genBFS(bfsG, s); bfsSI = 0; bfsDone = false; bfsPaused = false;
+      bfsG.resetStates(); logClear('bfs-log'); setSt('bfs-sd', 'bfs-st', 'Simulating…', true);
+      document.getElementById('bfs-pb').textContent = '⏸ Pause';
+      _timers.bfs = setInterval(() => { if (!bfsPaused) bfsDoStep(); }, spd('bfs-spd'));
+    }
+    function bfsDoStep() {
+      if (bfsDone || bfsSI >= bfsSteps.length) { bfsDone = true; stopTimer('bfs'); setSt('bfs-sd', 'bfs-st', 'Complete', false); return; }
+      const s = bfsSteps[bfsSI++];
+      bfsG.ns = s.ns; bfsG.es = s.es; bfsG.draw();
+      document.getElementById('bfs-queue').innerHTML = structHTML(s.q, 'background:rgba(245,158,11,0.2);border:1px solid var(--amber);color:var(--amber)');
+      document.getElementById('bfs-curr').textContent = s.curr != null ? s.curr : '—';
+      document.getElementById('bfs-distv').textContent = s.dv != null ? s.dv : '—';
+      document.getElementById('bfs-vcount').textContent = s.vc || 0;
+      if (s.log) logAdd('bfs-log', s.log, s.lc);
+      if (s.done) { bfsDone = true; stopTimer('bfs'); setSt('bfs-sd', 'bfs-st', '✨ Done!', false); setTimeout(() => runBFS(), 3000); }
+    }
+    function bfsManualStep() { if (!bfsDone && bfsSteps.length) bfsDoStep(); }
+    function bfsPause() { bfsPaused = !bfsPaused; document.getElementById('bfs-pb').textContent = bfsPaused ? '▶ Resume' : '⏸ Pause'; setSt('bfs-sd', 'bfs-st', bfsPaused ? 'Paused' : 'Simulating…', !bfsPaused); }
+    function bfsReset() { stopTimer('bfs'); bfsDone = true; bfsPaused = false; bfsG.resetStates(); logClear('bfs-log'); document.getElementById('bfs-queue').innerHTML = '';['bfs-curr', 'bfs-distv'].forEach(id => document.getElementById(id).textContent = '—'); document.getElementById('bfs-vcount').textContent = '0'; setSt('bfs-sd', 'bfs-st', 'Ready', false); }
+
+    // ===== DFS =====
+    let dfsSteps = [], dfsSI = 0, dfsDone = false, dfsPaused = false;
+    function genDFS(G, start) {
+      const steps = [], n = G.nodes.length; if (!n || !G.nodes[start]) return steps;
+      const adj = buildAdj(n, G.edges, false), vis = new Set([start]), order = [];
+      let ns = { [start]: 'start' }, es = {};
+      const stk = [start], stkArr = [start]; let maxD = 0;
+      steps.push({ ns: { ...ns }, es: { ...es }, stk: [...stkArr], ord: '', depth: 1, log: 'DFS from node ' + start, lc: 'highlight' });
+      while (stk.length) {
+        const u = stk.pop(); stkArr.pop(); order.push(u);
+        ns = { ...ns, [u]: 'current' };
+        steps.push({ ns: { ...ns }, es: { ...es }, stk: [...stkArr], ord: order.join('→'), depth: stkArr.length, log: 'Visit node ' + u, lc: '' });
+        const nbrs = adj[u].slice().reverse();
+        for (const { v } of nbrs) {
+          if (!vis.has(v)) {
+            vis.add(v); stk.push(v); stkArr.push(v);
+            ns = { ...ns, [v]: 'stack' }; const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'active' };
+            if (stkArr.length > maxD) maxD = stkArr.length;
+            steps.push({ ns: { ...ns }, es: { ...es }, stk: [...stkArr], ord: order.join('→'), depth: maxD, log: 'Push ' + v, lc: '' });
+          }
+        }
+        ns = { ...ns, [u]: 'visited' };
+        steps.push({ ns: { ...ns }, es: { ...es }, stk: [...stkArr], ord: order.join('→'), depth: maxD, log: 'Finished ' + u, lc: '' });
+      }
+      steps.push({ ...steps[steps.length - 1], stk: [], log: '✨ DFS complete! Order: ' + order.join('→'), lc: 'found-msg', done: true });
+      return steps;
+    }
+    function runDFS() {
+      stopTimer('dfs'); const s = parseInt(document.getElementById('dfs-start').value) || 0;
+      dfsSteps = genDFS(dfsG, s); dfsSI = 0; dfsDone = false; dfsPaused = false;
+      dfsG.resetStates(); logClear('dfs-log'); setSt('dfs-sd', 'dfs-st', 'Simulating…', true);
+      document.getElementById('dfs-pb').textContent = '⏸ Pause';
+      _timers.dfs = setInterval(() => { if (!dfsPaused) dfsDoStep(); }, spd('dfs-spd'));
+    }
+    function dfsDoStep() {
+      if (dfsDone || dfsSI >= dfsSteps.length) { dfsDone = true; stopTimer('dfs'); setSt('dfs-sd', 'dfs-st', 'Complete', false); return; }
+      const s = dfsSteps[dfsSI++];
+      dfsG.ns = s.ns; dfsG.es = s.es; dfsG.draw();
+      document.getElementById('dfs-stack').innerHTML = structHTML(s.stk.slice().reverse(), 'background:rgba(245,158,11,0.2);border:1px solid var(--amber);color:var(--amber)');
+      document.getElementById('dfs-order').textContent = s.ord || '—';
+      document.getElementById('dfs-depth').textContent = s.depth || 0;
+      if (s.log) logAdd('dfs-log', s.log, s.lc);
+      if (s.done) { dfsDone = true; stopTimer('dfs'); setSt('dfs-sd', 'dfs-st', '✨ Done!', false); setTimeout(() => runDFS(), 3000); }
+    }
+    function dfsManualStep() { if (!dfsDone && dfsSteps.length) dfsDoStep(); }
+    function dfsPause() { dfsPaused = !dfsPaused; document.getElementById('dfs-pb').textContent = dfsPaused ? '▶ Resume' : '⏸ Pause'; setSt('dfs-sd', 'dfs-st', dfsPaused ? 'Paused' : 'Simulating…', !dfsPaused); }
+    function dfsReset() { stopTimer('dfs'); dfsDone = true; dfsPaused = false; dfsG.resetStates(); logClear('dfs-log'); document.getElementById('dfs-stack').innerHTML = ''; document.getElementById('dfs-order').textContent = '—'; document.getElementById('dfs-depth').textContent = '0'; setSt('dfs-sd', 'dfs-st', 'Ready', false); }
+
+    // ===== DIJKSTRA =====
+    let dijkSteps = [], dijkSI = 0, dijkDone = false, dijkPaused = false;
+    function genDijk(G, src) {
+      const steps = [], n = G.nodes.length; if (!n || !G.nodes[src]) return steps;
+      const adj = buildAdj(n, G.edges, false);
+      const dist = new Array(n).fill(1e9), via = new Array(n).fill(-1); const settled = new Set();
+      dist[src] = 0; const pq = [[0, src]]; let ns = { [src]: 'queue' }, es = {}, relaxed = 0;
+      G.nodes.forEach(nd => { nd.distLabel = nd.id === src ? 0 : undefined; });
+      steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(), curr: src, relax: 0, log: 'Dijkstra from node ' + src + ': dist[' + src + ']=0', lc: 'highlight' });
+      while (pq.length) {
+        pq.sort((a, b) => a[0] - b[0]); const [d, u] = pq.shift();
+        if (settled.has(u) || d > dist[u]) continue;
+        settled.add(u); ns = { ...ns, [u]: 'current' };
+        steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Settle node ' + u + ' (dist=' + dist[u] + ')', lc: '' });
+        for (const { v, w } of adj[u]) {
+          if (!settled.has(v) && dist[u] + w < dist[v]) {
+            dist[v] = dist[u] + w; via[v] = u; pq.push([dist[v], v]); relaxed++;
+            ns = { ...ns, [v]: 'queue' }; const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'active' };
+            steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Relax: dist[' + v + ']=' + dist[v] + ' via ' + u, lc: 'highlight' });
+          }
+        }
+        ns = { ...ns, [u]: 'settled' };
+        const es2 = { ...es }; for (const { v } of adj[u]) { const ek = Math.min(u, v) + '-' + Math.max(u, v); if (es2[ek] === 'active') es2[ek] = 'settled'; }
+        es = es2;
+        steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Node ' + u + ' settled!', lc: '' });
+      }
+      steps.push({ ...steps[steps.length - 1], log: '✨ Done! All ' + settled.size + ' nodes settled.', lc: 'found-msg', done: true });
+      return steps;
+    }
+    function updDijkTable(dist, via, settled, curr, n) {
+      const tb = document.getElementById('dijk-tbody'); if (!tb) return; tb.innerHTML = '';
+      for (let i = 0; i < n; i++) {
+        const tr = document.createElement('tr'); const isSett = settled.has(i); const isCurr = i === curr;
+        const status = isSett ? 'Settled' : dist[i] < 1e9 ? 'In Heap' : '∞';
+        const cls = isSett ? 'sett' : isCurr ? 'curr' : dist[i] < 1e9 ? 'upd' : '';
+        tr.innerHTML = '<td>' + i + '</td><td class="' + cls + '">' + (dist[i] >= 1e9 ? '∞' : dist[i]) + '</td><td>' + (via[i] >= 0 ? via[i] : 'src') + '</td><td class="' + cls + '">' + status + '</td>';
+        tb.appendChild(tr);
+      }
+    }
+    function runDijkstra() {
+      stopTimer('dijkstra'); const src = parseInt(document.getElementById('dijk-source').value) || 0;
+      dijkSteps = genDijk(dijkG, src); dijkSI = 0; dijkDone = false; dijkPaused = false;
+      dijkG.resetStates(); logClear('dijk-log'); setSt('dijk-sd', 'dijk-st', 'Simulating…', true);
+      document.getElementById('dijk-pb').textContent = '⏸ Pause';
+      _timers.dijkstra = setInterval(() => { if (!dijkPaused) dijkDoStep(); }, spd('dijk-spd'));
+    }
+    function dijkDoStep() {
+      if (dijkDone || dijkSI >= dijkSteps.length) { dijkDone = true; stopTimer('dijkstra'); setSt('dijk-sd', 'dijk-st', 'Complete', false); return; }
+      const s = dijkSteps[dijkSI++];
+      dijkG.ns = s.ns; dijkG.es = s.es;
+      dijkG.nodes.forEach((nd, i) => { nd.distLabel = s.dist[i] < 1e9 ? s.dist[i] : undefined; });
+      dijkG.draw();
+      updDijkTable(s.dist, s.via, s.settled, s.curr, dijkG.nodes.length);
+      document.getElementById('dijk-curr').textContent = s.curr != null ? s.curr : '—';
+      document.getElementById('dijk-relax').textContent = s.relax || 0;
+      if (s.log) logAdd('dijk-log', s.log, s.lc);
+      if (s.done) { dijkDone = true; stopTimer('dijkstra'); setSt('dijk-sd', 'dijk-st', '✨ Done!', false); setTimeout(() => runDijkstra(), 3500); }
+    }
+    function dijkManualStep() { if (!dijkDone && dijkSteps.length) dijkDoStep(); }
+    function dijkPause() { dijkPaused = !dijkPaused; document.getElementById('dijk-pb').textContent = dijkPaused ? '▶ Resume' : '⏸ Pause'; setSt('dijk-sd', 'dijk-st', dijkPaused ? 'Paused' : 'Simulating…', !dijkPaused); }
+    function dijkReset() { stopTimer('dijkstra'); dijkDone = true; dijkPaused = false; dijkG.resetStates(); logClear('dijk-log'); document.getElementById('dijk-tbody').innerHTML = ''; document.getElementById('dijk-curr').textContent = '—'; document.getElementById('dijk-relax').textContent = '0'; setSt('dijk-sd', 'dijk-st', 'Ready', false); }
+
+    // ===== TOPO SORT =====
+    let topoSteps = [], topoSI = 0, topoDone = false, topoPaused = false;
+    function genTopo(G) {
+      const steps = [], n = G.nodes.length; if (!n) return steps;
+      const adj = buildAdj(n, G.edges, true);
+      const indeg = new Array(n).fill(0); G.edges.forEach(e => indeg[e.v]++);
+      const q = []; for (let i = 0; i < n; i++)if (!indeg[i]) q.push(i);
+      let ns = {}, es = {}; q.forEach(v => { ns[v] = 'queue'; }); const order = [];
+      steps.push({ ns: { ...ns }, es: { ...es }, q: [...q], order: [...order], log: 'Init queue (indeg=0): [' + q.join(',') + ']', lc: 'highlight' });
+      const ind2 = [...indeg];
+      while (q.length) {
+        const u = q.shift(); order.push(u); ns = { ...ns, [u]: 'topo-done' };
+        steps.push({ ns: { ...ns }, es: { ...es }, q: [...q], order: [...order], log: 'Process ' + u + ' → add to order', lc: '' });
+        for (const { v } of adj[u]) {
+          ind2[v]--; const ek = u + '-' + v; es = { ...es, [ek]: 'path' };
+          if (!ind2[v]) { q.push(v); ns = { ...ns, [v]: 'queue' }; steps.push({ ns: { ...ns }, es: { ...es }, q: [...q], order: [...order], log: 'Node ' + v + ' in-deg→0, enqueue', lc: 'highlight' }); }
+          else steps.push({ ns: { ...ns }, es: { ...es }, q: [...q], order: [...order], log: 'Node ' + v + ' in-deg=' + ind2[v], lc: '' });
+        }
+      }
+      const hasCycle = order.length < n;
+      steps.push({ ...steps[steps.length - 1], q: [], log: hasCycle ? '⚠ Cycle detected! Not a DAG' : '✨ Topo order: ' + order.join('→'), lc: hasCycle ? 'warn' : 'found-msg', done: true });
+      return steps;
+    }
+    function runTopo() {
+      stopTimer('toposort'); topoSteps = genTopo(topoG); topoSI = 0; topoDone = false; topoPaused = false;
+      topoG.resetStates(); logClear('topo-log'); document.getElementById('topo-result').innerHTML = '';
+      setSt('topo-sd', 'topo-st', 'Simulating…', true); document.getElementById('topo-pb').textContent = '⏸ Pause';
+      _timers.toposort = setInterval(() => { if (!topoPaused) topoDoStep(); }, spd('topo-spd'));
+    }
+    function topoDoStep() {
+      if (topoDone || topoSI >= topoSteps.length) { topoDone = true; stopTimer('toposort'); setSt('topo-sd', 'topo-st', 'Complete', false); return; }
+      const s = topoSteps[topoSI++];
+      topoG.ns = s.ns; topoG.es = s.es; topoG.draw();
+      document.getElementById('topo-queue').innerHTML = structHTML(s.q, 'background:rgba(245,158,11,0.2);border:1px solid var(--amber);color:var(--amber)');
+      const res = document.getElementById('topo-result'); res.innerHTML = '';
+      s.order.forEach(n => { const d = document.createElement('div'); d.className = 'topo-node'; d.textContent = n; res.appendChild(d); });
+      if (s.log) logAdd('topo-log', s.log, s.lc);
+      if (s.done) { topoDone = true; stopTimer('toposort'); setSt('topo-sd', 'topo-st', '✨ Done!', false); setTimeout(() => runTopo(), 3000); }
+    }
+    function topoManualStep() { if (!topoDone && topoSteps.length) topoDoStep(); }
+    function topoPause() { topoPaused = !topoPaused; document.getElementById('topo-pb').textContent = topoPaused ? '▶ Resume' : '⏸ Pause'; setSt('topo-sd', 'topo-st', topoPaused ? 'Paused' : 'Simulating…', !topoPaused); }
+    function topoReset() { stopTimer('toposort'); topoDone = true; topoPaused = false; topoG.resetStates(); logClear('topo-log'); document.getElementById('topo-queue').innerHTML = ''; document.getElementById('topo-result').innerHTML = ''; setSt('topo-sd', 'topo-st', 'Ready', false); }
+
+    // ===== BIPARTITE =====
+    let bipSteps = [], bipSI = 0, bipDone = false, bipPaused = false;
+    function genBip(G) {
+      const steps = [], n = G.nodes.length; if (!n) return steps;
+      const adj = buildAdj(n, G.edges, false); const color = new Array(n).fill(-1); let isBip = true;
+      let ns = {}, es = {};
+      steps.push({ ns: { ...ns }, es: { ...es }, log: '2-coloring via BFS…', lc: 'highlight' });
+      for (let start = 0; start < n && isBip; start++) {
+        if (color[start] !== -1) continue;
+        color[start] = 0; ns = { ...ns, [start]: 'red' };
+        const q = [start];
+        steps.push({ ns: { ...ns }, es: { ...es }, log: 'Color node ' + start + ' red (House A)', lc: '' });
+        while (q.length && isBip) {
+          const u = q.shift();
+          for (const { v } of adj[u]) {
+            if (color[v] === -1) {
+              color[v] = 1 - color[u]; ns = { ...ns, [v]: color[v] === 0 ? 'red' : 'blue' };
+              const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'active' };
+              steps.push({ ns: { ...ns }, es: { ...es }, log: 'Color node ' + v + (color[v] === 0 ? ' red' : ' blue'), lc: 'highlight' }); q.push(v);
+            } else if (color[v] === color[u]) {
+              isBip = false; ns = { ...ns, [v]: 'conflict', [u]: 'conflict' };
+              const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'active' };
+              steps.push({ ns: { ...ns }, es: { ...es }, log: '⚠ Conflict: nodes ' + u + ' and ' + v + ' same color!', lc: 'warn' }); break;
+            }
+          }
+        }
+      }
+      steps.push({ ...steps[steps.length - 1], log: isBip ? '✨ Graph is BIPARTITE!' : '✗ Graph NOT bipartite (odd cycle!)', lc: isBip ? 'found-msg' : 'warn', done: true, bip: isBip });
+      return steps;
+    }
+    function runBipartite() {
+      stopTimer('bipartite'); bipSteps = genBip(bipG); bipSI = 0; bipDone = false; bipPaused = false;
+      bipG.resetStates(); logClear('bip-log'); document.getElementById('bip-result').textContent = '—';
+      setSt('bip-sd', 'bip-st', 'Simulating…', true); document.getElementById('bip-pb').textContent = '⏸ Pause';
+      _timers.bipartite = setInterval(() => { if (!bipPaused) bipDoStep(); }, spd('bip-spd'));
+    }
+    function bipDoStep() {
+      if (bipDone || bipSI >= bipSteps.length) { bipDone = true; stopTimer('bipartite'); setSt('bip-sd', 'bip-st', 'Complete', false); return; }
+      const s = bipSteps[bipSI++];
+      bipG.ns = s.ns; bipG.es = s.es; bipG.draw();
+      if (s.log) logAdd('bip-log', s.log, s.lc);
+      if (s.done) { bipDone = true; stopTimer('bipartite'); document.getElementById('bip-result').textContent = s.bip ? '✓ Bipartite' : '✗ Not Bipartite'; setSt('bip-sd', 'bip-st', '✨ Done!', false); setTimeout(() => runBipartite(), 3000); }
+    }
+    function bipManualStep() { if (!bipDone && bipSteps.length) bipDoStep(); }
+    function bipPause() { bipPaused = !bipPaused; document.getElementById('bip-pb').textContent = bipPaused ? '▶ Resume' : '⏸ Pause'; setSt('bip-sd', 'bip-st', bipPaused ? 'Paused' : 'Simulating…', !bipPaused); }
+    function bipReset() { stopTimer('bipartite'); bipDone = true; bipPaused = false; bipG.resetStates(); logClear('bip-log'); document.getElementById('bip-result').textContent = '—'; setSt('bip-sd', 'bip-st', 'Ready', false); }
+
+    // ===== COMPONENTS =====
+    let compSteps = [], compSI = 0, compDone = false, compPaused = false;
+    function genComp(G) {
+      const steps = [], n = G.nodes.length; if (!n) return steps;
+      const adj = buildAdj(n, G.edges, false); const comp = new Array(n).fill(-1); let numComp = 0;
+      let ns = {}, es = {};
+      steps.push({ ns: { ...ns }, es: { ...es }, cnt: 0, log: 'Finding connected components…', lc: 'highlight' });
+      for (let start = 0; start < n; start++) {
+        if (comp[start] !== -1) continue;
+        const c = numComp++; const q = [start]; comp[start] = c; ns = { ...ns, [start]: 'comp' + c };
+        steps.push({ ns: { ...ns }, es: { ...es }, cnt: c + 1, log: 'Component ' + (c + 1) + ': start from node ' + start, lc: '' });
+        while (q.length) {
+          const u = q.shift();
+          for (const { v } of adj[u]) {
+            if (comp[v] === -1) {
+              comp[v] = c; q.push(v); ns = { ...ns, [v]: 'comp' + c }; const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'path' };
+              steps.push({ ns: { ...ns }, es: { ...es }, cnt: c + 1, log: '  Add node ' + v + ' → component ' + (c + 1), lc: '' });
+            }
+          }
+        }
+      }
+      steps.push({ ...steps[steps.length - 1], log: '✨ Found ' + numComp + ' component' + (numComp > 1 ? 's' : '') + '!', lc: 'found-msg', done: true, cnt: numComp });
+      return steps;
+    }
+    function runComponents() {
+      stopTimer('components'); compSteps = genComp(compG); compSI = 0; compDone = false; compPaused = false;
+      compG.resetStates(); logClear('comp-log'); document.getElementById('comp-count').textContent = '—';
+      setSt('comp-sd', 'comp-st', 'Simulating…', true); document.getElementById('comp-pb').textContent = '⏸ Pause';
+      _timers.components = setInterval(() => { if (!compPaused) compDoStep(); }, spd('comp-spd'));
+    }
+    function compDoStep() {
+      if (compDone || compSI >= compSteps.length) { compDone = true; stopTimer('components'); setSt('comp-sd', 'comp-st', 'Complete', false); return; }
+      const s = compSteps[compSI++];
+      compG.ns = s.ns; compG.es = s.es; compG.draw();
+      document.getElementById('comp-count').textContent = s.cnt || '—';
+      if (s.log) logAdd('comp-log', s.log, s.lc);
+      if (s.done) { compDone = true; stopTimer('components'); setSt('comp-sd', 'comp-st', '✨ Done!', false); setTimeout(() => runComponents(), 3000); }
+    }
+    function compManualStep() { if (!compDone && compSteps.length) compDoStep(); }
+    function compPause() { compPaused = !compPaused; document.getElementById('comp-pb').textContent = compPaused ? '▶ Resume' : '⏸ Pause'; setSt('comp-sd', 'comp-st', compPaused ? 'Paused' : 'Simulating…', !compPaused); }
+    function compReset() { stopTimer('components'); compDone = true; compPaused = false; compG.resetStates(); logClear('comp-log'); document.getElementById('comp-count').textContent = '—'; setSt('comp-sd', 'comp-st', 'Ready', false); }
+
+    // ===== INIT =====
+    window.addEventListener('load', () => {
+      bfsG = new GraphSim('bfs-canvas', false);
+      dfsG = new GraphSim('dfs-canvas', false);
+      dijkG = new GraphSim('dijk-canvas', false);
+      topoG = new GraphSim('topo-canvas', true);
+      bipG = new GraphSim('bip-canvas', false);
+      compG = new GraphSim('comp-canvas', false);
+      // Load BFS first (active)
+      setTimeout(() => {
+        loadAndResize('bfs');
+        setTimeout(() => runBFS(), 450);
+      }, 150);
+    });
+  </script>
+</body>
+
+</html>

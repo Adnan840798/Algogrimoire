@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Structure Sanctum — AlgoGrimoire</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --void:#05050f;--deep:#09091d;--surface:#0f0f28;--card:#141438;--card2:#1a1a45;
+  --gold:#c9a84c;--gold-bright:#f0c96e;--parchment:#f0e0b8;--text:#d0c4a0;--text-dim:#9a8a6a;
+  --border:#22224a;--green:#10b981;--blue:#3b82f6;--purple:#8b5cf6;--red:#ef4444;--amber:#f59e0b;
+  --pink:#f472b6;--accent:#f59e0b;
+}
+body{background:var(--void);color:var(--text);font-family:'Crimson Text',serif;min-height:100vh;overflow-x:hidden;}
+canvas.bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(5,5,15,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:12px 40px;display:flex;align-items:center;gap:16px;}
+.nav-logo{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);text-decoration:none;}
+.nav-back{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;text-transform:uppercase;transition:color 0.3s;}
+.nav-back:hover{color:var(--amber);}
+.nav-sep{color:var(--border);}
+.nav-current{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;}
+.nav-links{display:flex;gap:12px;margin-left:auto;}
+.nav-link{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-decoration:none;text-transform:uppercase;padding:5px 12px;border:1px solid transparent;border-radius:20px;transition:all 0.3s;}
+.nav-link:hover{color:var(--gold);border-color:var(--border);}
+
+.page-header{position:relative;z-index:1;text-align:center;padding:48px 40px 32px;}
+.page-badge{display:inline-block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;color:var(--amber);text-transform:uppercase;border:1px solid rgba(245,158,11,0.3);padding:5px 18px;border-radius:30px;background:rgba(245,158,11,0.06);margin-bottom:16px;}
+.page-title{font-family:'Cinzel Decorative',serif;font-size:clamp(28px,5vw,52px);color:var(--gold);text-shadow:0 0 40px rgba(201,168,76,0.4);margin-bottom:8px;}
+.page-sub{font-size:16px;color:var(--text-dim);font-style:italic;}
+.divider{width:180px;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:20px auto;opacity:0.5;}
+
+.main-layout{position:relative;z-index:1;display:grid;grid-template-columns:220px 1fr;gap:24px;max-width:1300px;margin:0 auto;padding:0 32px 60px;}
+@media(max-width:800px){.main-layout{grid-template-columns:1fr;}}
+
+.sidebar{height:fit-content;position:sticky;top:80px;}
+.sidebar-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase;padding:0 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.algo-btn{width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:10px;padding:10px 14px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all 0.3s;margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+.algo-btn:hover{background:rgba(255,255,255,0.04);color:var(--text);border-color:var(--border);}
+.algo-btn.active{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:var(--amber);}
+.algo-btn .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+.sim-area{display:flex;flex-direction:column;gap:20px;}
+.algo-section{display:none;}.algo-section.active{display:flex;flex-direction:column;gap:20px;}
+
+.panel{background:linear-gradient(145deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;padding:24px;}
+.panel-title{font-family:'Cinzel',serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.panel-title::before{content:'';width:20px;height:1px;background:var(--gold);opacity:0.5;}
+
+.input-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.input-group{display:flex;flex-direction:column;gap:6px;}
+.input-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.spell-input{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-family:'Crimson Text',serif;font-size:15px;outline:none;transition:border-color 0.3s;}
+.spell-input:focus{border-color:var(--amber);}
+.spell-input.sm{width:100px;}
+
+.btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;border:none;border-radius:8px;padding:9px 18px;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:8px;}
+.btn-cast{background:linear-gradient(135deg,#7a5200,var(--amber));color:#fff;box-shadow:0 4px 20px rgba(245,158,11,0.3);}
+.btn-cast:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(245,158,11,0.4);}
+.btn-step{background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--gold);}
+.btn-step:hover{background:rgba(201,168,76,0.2);}
+.btn-reset{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red);}
+.btn-reset:hover{background:rgba(239,68,68,0.2);}
+.btn-add{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);}
+.btn-add:hover{background:rgba(16,185,129,0.2);}
+.speed-wrap{display:flex;align-items:center;gap:6px;font-size:14px;}
+input[type=range]{width:90px;accent-color:var(--amber);cursor:pointer;}
+
+.desc{font-size:15px;color:var(--text-dim);font-style:italic;line-height:1.6;margin-bottom:16px;}
+
+/* STACK */
+.ds-container{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end;padding:12px 0;}
+.stack-vis{display:flex;flex-direction:column;align-items:center;gap:0;min-width:110px;}
+.stack-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;}
+.stack-cell{width:110px;height:46px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface);font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--text);transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);position:relative;}
+.stack-cell:first-child{border-radius:0 0 8px 8px;}
+.stack-cell.top{background:rgba(245,158,11,0.2);border-color:var(--amber);color:var(--amber);box-shadow:0 0 16px rgba(245,158,11,0.35);transform:scale(1.04);}
+.stack-cell.new-item{background:rgba(16,185,129,0.18);border-color:var(--green);color:var(--green);animation:slideDown 0.4s ease;}
+.stack-base{width:110px;height:4px;background:var(--border);border-radius:0 0 6px 6px;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-30px) scale(0.8);}to{opacity:1;transform:none;}}
+
+/* QUEUE */
+.queue-vis{display:flex;flex-direction:column;gap:8px;}
+.queue-track{display:flex;gap:0;align-items:center;flex-wrap:wrap;}
+.queue-cell{width:56px;height:50px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface);font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--text);transition:all 0.35s;}
+.queue-cell:first-child{border-radius:8px 0 0 8px;}
+.queue-cell:last-child{border-radius:0 8px 8px 0;}
+.queue-cell.front{background:rgba(59,130,246,0.2);border-color:var(--blue);color:var(--blue);box-shadow:0 0 14px rgba(59,130,246,0.3);}
+.queue-cell.back{background:rgba(16,185,129,0.15);border-color:var(--green);color:var(--green);}
+.queue-labels{display:flex;gap:0;}
+.queue-lbl{width:56px;text-align:center;font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);letter-spacing:1px;}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.7);}to{opacity:1;transform:none;}}
+
+/* DEQUE */
+.deque-vis{display:flex;flex-direction:column;gap:8px;}
+.deque-track{display:flex;gap:0;align-items:center;flex-wrap:wrap;}
+.deque-cell{width:56px;height:50px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface);font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--text);transition:all 0.35s;}
+.deque-cell:first-child{border-radius:8px 0 0 8px;}
+.deque-cell:last-child{border-radius:0 8px 8px 0;}
+.deque-cell.front{background:rgba(59,130,246,0.2);border-color:var(--blue);color:var(--blue);box-shadow:0 0 14px rgba(59,130,246,0.3);}
+.deque-cell.back{background:rgba(244,114,182,0.15);border-color:var(--pink);color:var(--pink);}
+
+/* MONOTONIC STACK */
+.mono-array{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;}
+.mono-cell{width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:2px solid var(--border);background:var(--surface);font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--text);transition:all 0.35s;position:relative;}
+.mono-cell .midx{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text-dim);font-family:'Cinzel',serif;}
+.mono-cell.cur{background:rgba(245,158,11,0.2);border-color:var(--amber);color:var(--amber);transform:translateY(-6px);box-shadow:0 0 16px rgba(245,158,11,0.4);}
+.mono-cell.in-stack{background:rgba(139,92,246,0.15);border-color:var(--purple);color:#c084fc;}
+.mono-cell.popped{background:rgba(239,68,68,0.12);border-color:var(--red);color:var(--red);opacity:0.6;}
+.mono-cell.nge{background:rgba(16,185,129,0.12);border-color:var(--green);color:var(--green);}
+.nge-result{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.nge-pair{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:4px 10px;font-family:'Cinzel',serif;font-size:11px;color:var(--green);}
+
+/* HEAP */
+.heap-canvas-wrap{position:relative;width:100%;overflow:hidden;border-radius:10px;background:rgba(0,0,0,0.2);}
+#heap-canvas{width:100%;display:block;}
+
+/* MAP */
+.map-entry{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:8px 14px;font-family:'Cinzel',serif;font-size:11px;}
+
+/* LOG */
+.log-box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-height:150px;overflow-y:auto;font-family:'Crimson Text',serif;font-size:14px;}
+.log-entry{padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-dim);}
+.log-entry.highlight{color:var(--amber);}
+.log-entry.found-msg{color:var(--green);}
+.log-entry.warn{color:var(--red);}
+
+.badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:3px 10px;border-radius:20px;text-transform:uppercase;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:var(--amber);}
+.badge.time{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25);color:var(--green);}
+.result-box{background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:12px 18px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;}
+.result-val{font-size:22px;color:var(--amber);font-family:'Cinzel Decorative',serif;margin-top:4px;}
+
+/* MOBILE */
+@media(max-width:700px){
+  nav{padding:10px 12px;gap:8px;flex-wrap:wrap;}
+  .nav-links{overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;gap:4px;margin-left:0;width:100%;}
+  .nav-links::-webkit-scrollbar{display:none;}
+  .nav-link{font-size:10px;padding:4px 8px;flex-shrink:0;}
+  .page-header{padding:24px 14px 16px;}
+  .page-title{font-size:clamp(22px,6vw,40px)!important;}
+  .main-layout{padding:0 10px 40px!important;gap:12px;}
+  .sidebar{position:static!important;display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:4px;padding-bottom:8px;scrollbar-width:none;}
+  .sidebar::-webkit-scrollbar{display:none;}
+  .sidebar-title{display:none;}
+  .algo-btn{flex-shrink:0;width:auto;white-space:nowrap;padding:8px 12px;font-size:11px;margin-bottom:0;}
+  .panel{padding:14px 12px;}
+  .input-row{gap:8px;}
+  .spell-input{font-size:14px;min-width:0;}
+  .spell-input.sm{width:80px;min-width:0;}
+  .btn{padding:8px 12px;font-size:10px;letter-spacing:1px;}
+  .stack-cell{width:90px;height:40px;font-size:13px;}
+  .stack-base{width:90px;}
+  .queue-cell,.deque-cell{width:46px;height:42px;font-size:13px;}
+  .queue-lbl{width:46px;}
+  .mono-cell{width:44px;height:44px;font-size:14px;}
+  input[type=range]{width:70px;}
+  .ds-container{gap:16px;}
+}
+</style>
+</head>
+<body>
+<canvas class="bg" id="bgCanvas"></canvas>
+
+<nav>
+  <a href="index.html" class="nav-logo">⚯͛ AlgoGrimoire</a>
+  <span class="nav-sep">›</span>
+  <a href="index.html" class="nav-back">Chapters</a>
+  <span class="nav-sep">›</span>
+  <span class="nav-current">Chapter IV · Structure Sanctum</span>
+  <div class="nav-links">
+    <a href="arrays.html" class="nav-link">Arrays</a>
+    <a href="graphs.html" class="nav-link">Graphs</a>
+    <a href="dp.html" class="nav-link">DP</a>
+    <a href="math.html" class="nav-link">Math</a>
+    <a href="trees.html" class="nav-link">Trees</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-badge">Chapter IV</div>
+  <h1 class="page-title">Structure Sanctum</h1>
+  <p class="page-sub">Master the vessels that hold your magic.</p>
+  <div class="divider"></div>
+</div>
+
+<div class="main-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Spells</div>
+    <button class="algo-btn active" onclick="showAlgo('stack',this)"><span class="dot"></span>Stack</button>
+    <button class="algo-btn" onclick="showAlgo('queue',this)"><span class="dot"></span>Queue</button>
+    <button class="algo-btn" onclick="showAlgo('deque',this)"><span class="dot"></span>Deque</button>
+    <button class="algo-btn" onclick="showAlgo('mono',this)"><span class="dot"></span>Monotonic Stack</button>
+    <button class="algo-btn" onclick="showAlgo('heap',this)"><span class="dot"></span>Min Heap / PQ</button>
+    <button class="algo-btn" onclick="showAlgo('map',this)"><span class="dot"></span>Map / Set</button>
+  </aside>
+
+  <div class="sim-area">
+
+    <!-- STACK -->
+    <div id="sec-stack" class="algo-section active">
+      <div class="panel">
+        <div class="panel-title">Stack — LIFO</div>
+        <p class="desc">Last In, First Out. Like plates stacked in the Great Hall — the last placed is always served first.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Value</div><input class="spell-input sm" id="stk-val" type="number" value="42"></div>
+          <button class="btn btn-cast" onclick="stkPush()">⬆ Push</button>
+          <button class="btn btn-step" onclick="stkPop()">⬇ Pop</button>
+          <button class="btn btn-add" onclick="stkPeek()">👁 Peek</button>
+          <button class="btn btn-reset" onclick="stkReset()">Reset</button>
+          <button class="btn btn-cast" onclick="stkDemo()">▶ Demo</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Stack Visualization</div>
+        <div class="ds-container">
+          <div>
+            <div class="stack-label">← TOP</div>
+            <div class="stack-vis" id="stk-vis"></div>
+            <div class="stack-base"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;justify-content:center;">
+            <div class="result-box"><div>Top</div><div class="result-val" id="stk-top">Empty</div></div>
+            <div class="result-box"><div>Size</div><div class="result-val" id="stk-size">0</div></div>
+            <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Push O(1)</span><span class="badge time">Pop O(1)</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="stk-log"></div></div>
+    </div>
+
+    <!-- QUEUE -->
+    <div id="sec-queue" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Queue — FIFO</div>
+        <p class="desc">First In, First Out. Like a queue at Diagon Alley — whoever arrived first leaves first.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Value</div><input class="spell-input sm" id="q-val" type="number" value="7"></div>
+          <button class="btn btn-cast" onclick="qEnqueue()">→ Enqueue</button>
+          <button class="btn btn-step" onclick="qDequeue()">← Dequeue</button>
+          <button class="btn btn-add" onclick="qFront()">👁 Front</button>
+          <button class="btn btn-reset" onclick="qReset()">Reset</button>
+          <button class="btn btn-cast" onclick="qDemo()">▶ Demo</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Queue Visualization</div>
+        <div class="queue-vis">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--blue);margin-bottom:4px;">◄ DEQUEUE (FRONT)</div>
+          <div class="queue-track" id="q-track"></div>
+          <div class="queue-labels" id="q-labels"></div>
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--green);margin-top:4px;text-align:right;">ENQUEUE (BACK) ►</div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap;">
+          <div class="result-box"><div>Front</div><div class="result-val" id="q-front">—</div></div>
+          <div class="result-box"><div>Back</div><div class="result-val" id="q-back">—</div></div>
+          <div class="result-box"><div>Size</div><div class="result-val" id="q-size">0</div></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="q-log"></div></div>
+    </div>
+
+    <!-- DEQUE -->
+    <div id="sec-deque" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Deque — Double Ended Queue</div>
+        <p class="desc">Push and pop from both ends in O(1). Essential for sliding window maximum problems.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Value</div><input class="spell-input sm" id="dq-val" type="number" value="5"></div>
+          <button class="btn btn-cast" onclick="dqPushFront()">⬅ Front</button>
+          <button class="btn btn-cast" onclick="dqPushBack()">Back ➡</button>
+          <button class="btn btn-step" onclick="dqPopFront()">Pop Front</button>
+          <button class="btn btn-step" onclick="dqPopBack()">Pop Back</button>
+          <button class="btn btn-reset" onclick="dqReset()">Reset</button>
+          <button class="btn btn-add" onclick="dqDemo()">▶ Demo</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Deque Visualization</div>
+        <div class="deque-vis">
+          <div style="display:flex;justify-content:space-between;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;">
+            <span style="color:var(--blue);">◄ FRONT</span><span style="color:var(--pink);">BACK ►</span>
+          </div>
+          <div class="deque-track" id="dq-track"></div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap;">
+          <div class="result-box"><div>Front</div><div class="result-val" id="dq-front">—</div></div>
+          <div class="result-box"><div>Back</div><div class="result-val" id="dq-back">—</div></div>
+          <div class="result-box"><div>Size</div><div class="result-val" id="dq-size">0</div></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="dq-log"></div></div>
+    </div>
+
+    <!-- MONOTONIC STACK -->
+    <div id="sec-mono" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Monotonic Stack — Next Greater Element</div>
+        <p class="desc">Maintain a stack of indices in decreasing order. When an element is greater than the stack top, it's the NGE for that element. O(n) time.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Array</div><input class="spell-input" id="mono-arr" value="4,5,2,10,8,3,7,1,9"></div>
+          <button class="btn btn-cast" onclick="monoAuto()">✦ Cast</button>
+          <button class="btn btn-step" onclick="monoStep()">Step →</button>
+          <button class="btn btn-reset" onclick="monoReset()">Reset</button>
+          <div class="speed-wrap">🐢<input type="range" id="mono-speed" min="100" max="1500" value="800" step="50">🐇</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Visualization</div>
+        <div class="mono-array" id="mono-cells" style="margin-bottom:28px;"></div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+          <div>
+            <div class="input-label" style="margin-bottom:8px;">Stack (indices, top→)</div>
+            <div id="mono-stack-vis" style="display:flex;gap:6px;flex-wrap:wrap;min-height:52px;align-items:center;"></div>
+          </div>
+          <div style="flex:1;">
+            <div class="input-label" style="margin-bottom:8px;">NGE Results (elem→NGE)</div>
+            <div class="nge-result" id="mono-nge"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="mono-log"></div></div>
+    </div>
+
+    <!-- HEAP / PQ -->
+    <div id="sec-heap" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Min Heap / Priority Queue</div>
+        <p class="desc">Min at root. Insert: add to end, bubble up. Extract-min: swap root with last, remove, bubble down. O(log n) for both operations.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Insert Value</div><input class="spell-input sm" id="hp-val" type="number" value="15"></div>
+          <button class="btn btn-cast" onclick="hpInsert()">⬆ Insert</button>
+          <button class="btn btn-step" onclick="hpExtract()">⬇ Extract Min</button>
+          <button class="btn btn-reset" onclick="hpReset()">Reset</button>
+        </div>
+        <div class="input-row" style="margin-top:10px;">
+          <div class="input-group"><div class="input-label">Build from Array</div><input class="spell-input" id="hp-build-arr" value="9,4,7,1,8,3,6" style="min-width:160px;"></div>
+          <button class="btn btn-add" onclick="hpBuild()">🔨 Build Heap</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Heap Tree</div>
+        <div class="heap-canvas-wrap" id="heap-wrap">
+          <canvas id="heap-canvas" height="260"></canvas>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+          <div class="result-box"><div>Min (Root)</div><div class="result-val" id="hp-min">—</div></div>
+          <div class="result-box"><div>Size</div><div class="result-val" id="hp-size">0</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Insert O(log n)</span><span class="badge time">Extract O(log n)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="hp-log"></div></div>
+    </div>
+
+    <!-- MAP / SET -->
+    <div id="sec-map" class="algo-section">
+      <div class="panel">
+        <div class="panel-title">Map &amp; Set Operations</div>
+        <p class="desc">Hash maps give O(1) lookups. Sets store unique keys. Together they power frequency counting, two-sum, duplicate detection, and more.</p>
+        <div class="input-row">
+          <div class="input-group"><div class="input-label">Key</div><input class="spell-input sm" id="map-key" value="spell"></div>
+          <div class="input-group"><div class="input-label">Value</div><input class="spell-input sm" id="map-val" value="Lumos"></div>
+          <button class="btn btn-cast" onclick="mapSet()">Set</button>
+          <button class="btn btn-step" onclick="mapGet()">Get</button>
+          <button class="btn btn-reset" onclick="mapDelete()">Delete</button>
+        </div>
+        <div class="input-row" style="margin-top:10px;">
+          <div class="input-group"><div class="input-label">Array (frequency count demo)</div><input class="spell-input" id="map-demo-arr" value="a,b,a,c,b,a,d,c,a"></div>
+          <button class="btn btn-add" onclick="mapFreqDemo()">Count Frequencies</button>
+          <button class="btn btn-reset" onclick="mapClear()">Clear All</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Map Contents</div>
+        <div id="map-display" style="display:flex;flex-wrap:wrap;gap:8px;min-height:60px;padding:8px 0;"></div>
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+          <div class="result-box"><div>Size</div><div class="result-val" id="map-size">0</div></div>
+          <div style="flex:1;" id="map-result-msg"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><span class="badge">Get/Set O(1)</span><span class="badge time">Delete O(1)</span></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-title">Spell Log</div><div class="log-box" id="map-log"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Starfield ──────────────────────────────────────────────
+const bgC=document.getElementById('bgCanvas'),bgX=bgC.getContext('2d');let bgStars=[];
+function bgResize(){bgC.width=innerWidth;bgC.height=innerHeight;bgStars=Array.from({length:180},()=>({x:Math.random()*bgC.width,y:Math.random()*bgC.height,r:Math.random()*1.2+0.2,a:Math.random(),s:0.003+Math.random()*0.005}));}
+bgResize();window.addEventListener('resize',()=>{bgResize();hpDraw();});
+(function animBg(){bgX.clearRect(0,0,bgC.width,bgC.height);bgStars.forEach(s=>{s.a+=s.s;if(s.a>1||s.a<0)s.s*=-1;bgX.beginPath();bgX.arc(s.x,s.y,s.r,0,Math.PI*2);bgX.fillStyle=`rgba(201,168,76,${s.a*0.7})`;bgX.fill();});requestAnimationFrame(animBg);})();
+
+// ── Sound System ──────────────────────────────────────────
+let _ac=null;
+function ac(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return _ac;}
+function tone(f,t='sine',d=0.15,v=0.18,dl=0){
+  try{const ctx=ac();if(!ctx)return;if(ctx.state==='suspended')ctx.resume();
+    const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=t;
+    o.frequency.setValueAtTime(f,ctx.currentTime+dl);g.gain.setValueAtTime(v,ctx.currentTime+dl);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dl+d);
+    o.start(ctx.currentTime+dl);o.stop(ctx.currentTime+dl+d+0.05);
+  }catch(e){}
+}
+function sndClick(){tone(880,'sine',0.07,0.18);}
+function sndFound(){[523,659,784,1047].forEach((f,i)=>tone(f,'sine',0.28,0.22,i*0.08));}
+function sndWarn(){tone(220,'sawtooth',0.14,0.14);}
+function sndPop(){tone(660,'sine',0.06,0.12);}
+function sndPush(){tone(440,'sine',0.1,0.15);}
+function sndPull(){tone(330,'sine',0.1,0.15);}
+
+// ── Utils ─────────────────────────────────────────────────
+function spd(id){return Math.max(80,1600-parseInt(document.getElementById(id).value||900));}
+function showAlgo(id,btn){
+  document.querySelectorAll('.algo-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.algo-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');sndClick();
+}
+function logAdd(id,msg,cls=''){
+  const b=document.getElementById(id);if(!b)return;
+  const e=document.createElement('div');e.className='log-entry '+(cls||'');e.textContent=msg;b.prepend(e);
+  while(b.children.length>50)b.lastChild.remove();
+  if(cls==='found-msg')sndFound();else if(cls==='warn')sndWarn();else sndPop();
+}
+function logClear(id){const b=document.getElementById(id);if(b)b.innerHTML='';}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ══════ STACK ═══════════════════════════════════════════════
+let stk=[];
+function stkRender(){
+  const vis=document.getElementById('stk-vis');vis.innerHTML='';
+  [...stk].reverse().forEach((v,i)=>{
+    const c=document.createElement('div');c.className='stack-cell'+(i===0?' top':'');c.textContent=v;vis.appendChild(c);
+  });
+  document.getElementById('stk-top').textContent=stk.length?stk[stk.length-1]:'Empty';
+  document.getElementById('stk-size').textContent=stk.length;
+}
+function stkPush(){
+  const v=parseInt(document.getElementById('stk-val').value);if(isNaN(v))return;
+  stk.push(v);stkRender();logAdd('stk-log',`⬆ Push(${v}) → size ${stk.length}`,'highlight');sndPush();
+}
+function stkPop(){
+  if(!stk.length){logAdd('stk-log','⚠ Stack underflow!','warn');return;}
+  const v=stk.pop();stkRender();logAdd('stk-log',`⬇ Pop() → ${v}`,'found-msg');sndPull();
+}
+function stkPeek(){if(!stk.length){logAdd('stk-log','⚠ Stack empty!','warn');return;}logAdd('stk-log',`👁 Peek → ${stk[stk.length-1]}`,'highlight');}
+function stkReset(){stk=[];stkRender();logClear('stk-log');}
+async function stkDemo(){
+  stkReset();logAdd('stk-log','🎭 Demo: balancing parentheses expression…');
+  const ops=[{type:'push',v:10},{type:'push',v:25},{type:'push',v:7},{type:'peek'},{type:'push',v:42},{type:'pop'},{type:'pop'},{type:'push',v:3},{type:'pop'},{type:'pop'}];
+  for(const op of ops){
+    await sleep(600);
+    if(op.type==='push'){document.getElementById('stk-val').value=op.v;stkPush();}
+    else if(op.type==='pop')stkPop();
+    else stkPeek();
+  }
+  logAdd('stk-log','✨ Demo complete!','found-msg');
+}
+
+// ══════ QUEUE ════════════════════════════════════════════════
+let q=[];
+function qRender(){
+  const track=document.getElementById('q-track'),labels=document.getElementById('q-labels');
+  track.innerHTML='';labels.innerHTML='';
+  q.forEach((v,i)=>{
+    const c=document.createElement('div');c.className='queue-cell'+(i===0?' front':i===q.length-1?' back':'');c.textContent=v;track.appendChild(c);
+    const l=document.createElement('div');l.className='queue-lbl';l.textContent=i===0?'front':i===q.length-1?'back':i;labels.appendChild(l);
+  });
+  document.getElementById('q-front').textContent=q.length?q[0]:'—';
+  document.getElementById('q-back').textContent=q.length?q[q.length-1]:'—';
+  document.getElementById('q-size').textContent=q.length;
+}
+function qEnqueue(){const v=parseInt(document.getElementById('q-val').value);if(isNaN(v))return;q.push(v);qRender();logAdd('q-log',`→ Enqueue(${v}) at back`,'highlight');sndPush();}
+function qDequeue(){if(!q.length){logAdd('q-log','⚠ Queue empty!','warn');return;}const v=q.shift();qRender();logAdd('q-log',`← Dequeue() → ${v} from front`,'found-msg');sndPull();}
+function qFront(){if(!q.length)return;logAdd('q-log',`👁 Front = ${q[0]}`);}
+function qReset(){q=[];qRender();logClear('q-log');}
+async function qDemo(){
+  qReset();logAdd('q-log','🎭 Demo: BFS order — nodes 1..5…');
+  for(const v of[1,2,3,4,5]){document.getElementById('q-val').value=v;qEnqueue();await sleep(500);}
+  await sleep(300);
+  for(let i=0;i<5;i++){qDequeue();await sleep(500);}
+  logAdd('q-log','✨ Demo complete!','found-msg');
+}
+
+// ══════ DEQUE ════════════════════════════════════════════════
+let dq=[];
+function dqRender(){
+  const track=document.getElementById('dq-track');track.innerHTML='';
+  dq.forEach((v,i)=>{const c=document.createElement('div');c.className='deque-cell'+(i===0?' front':i===dq.length-1?' back':'');c.textContent=v;track.appendChild(c);});
+  document.getElementById('dq-front').textContent=dq.length?dq[0]:'—';
+  document.getElementById('dq-back').textContent=dq.length?dq[dq.length-1]:'—';
+  document.getElementById('dq-size').textContent=dq.length;
+}
+function dqPushFront(){const v=parseInt(document.getElementById('dq-val').value);if(isNaN(v))return;dq.unshift(v);dqRender();logAdd('dq-log',`⬅ PushFront(${v})`,'highlight');sndPush();}
+function dqPushBack(){const v=parseInt(document.getElementById('dq-val').value);if(isNaN(v))return;dq.push(v);dqRender();logAdd('dq-log',`➡ PushBack(${v})`,'highlight');sndPush();}
+function dqPopFront(){if(!dq.length)return;const v=dq.shift();dqRender();logAdd('dq-log',`PopFront() → ${v}`,'found-msg');sndPull();}
+function dqPopBack(){if(!dq.length)return;const v=dq.pop();dqRender();logAdd('dq-log',`PopBack() → ${v}`,'found-msg');sndPull();}
+function dqReset(){dq=[];dqRender();logClear('dq-log');}
+async function dqDemo(){
+  dqReset();logAdd('dq-log','🎭 Demo: palindrome check…');
+  const vals=[5,12,3,8,3,12,5];
+  for(const v of vals){document.getElementById('dq-val').value=v;dqPushBack();await sleep(400);}
+  logAdd('dq-log','Checking palindrome by comparing front & back…');
+  await sleep(400);
+  let ok=true;
+  while(dq.length>1){const f=dq.shift(),b=dq.pop();logAdd('dq-log',`Front=${f} vs Back=${b}: ${f===b?'✓ match':'✗ mismatch'}`,f===b?'highlight':'warn');await sleep(500);if(f!==b){ok=false;break;}}
+  logAdd('dq-log',ok?'✨ Palindrome!':'✗ Not palindrome',ok?'found-msg':'warn');
+}
+
+// ══════ MONOTONIC STACK ══════════════════════════════════════
+let monoState={arr:[],stk:[],cur:0,nge:[],running:false,timer:null};
+function monoReset(){
+  clearTimeout(monoState.timer);monoState.running=false;monoState.stk=[];monoState.cur=0;monoState.nge=[];
+  document.getElementById('mono-cells').innerHTML='';document.getElementById('mono-stack-vis').innerHTML='';document.getElementById('mono-nge').innerHTML='';logClear('mono-log');
+}
+function monoRenderCells(curIdx){
+  const arr=monoState.arr,stk=monoState.stk,nge=monoState.nge;
+  let html='';
+  arr.forEach((v,i)=>{
+    let cls='mono-cell';
+    if(i===curIdx)cls+=' cur';
+    else if(stk.includes(i))cls+=' in-stack';
+    else if(nge[i]!==-2)cls+=' nge';
+    html+=`<div class="${cls}">${v}<div class="midx">${i}</div></div>`;
+  });
+  document.getElementById('mono-cells').innerHTML=html;
+  document.getElementById('mono-stack-vis').innerHTML=monoState.stk.map(i=>`<div style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.4);font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:#c084fc;">${arr[i]}<span style="font-size:8px;color:var(--text-dim);margin-left:2px;">[${i}]</span></div>`).join('<span style="font-size:16px;color:var(--text-dim);padding:0 2px;">→</span>');
+  document.getElementById('mono-nge').innerHTML=nge.map((v,i)=>v!==-2?`<div class="nge-pair">${arr[i]}→${v===-1?'∞':v}</div>`:''). join('');
+}
+function monoInit(){
+  monoReset();
+  monoState.arr=document.getElementById('mono-arr').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  monoState.nge=new Array(monoState.arr.length).fill(-2);// -2 = not computed, -1 = no NGE
+  monoRenderCells(-1);
+  logAdd('mono-log',`🔮 Array: [${monoState.arr.join(', ')}] — Next Greater Element`);
+}
+function monoStep(){
+  if(!monoState.arr.length)monoInit();
+  const {arr,stk,nge}=monoState;
+  if(monoState.cur>=arr.length){monoFinish();return;}
+  const i=monoState.cur;
+  // While stack top has smaller value, current element is their NGE
+  while(stk.length&&arr[stk[stk.length-1]]<arr[i]){
+    const j=stk.pop();nge[j]=arr[i];
+    logAdd('mono-log',`NGE(arr[${j}]=${arr[j]}) = ${arr[i]}`,'highlight');
+  }
+  stk.push(i);
+  logAdd('mono-log',`Push arr[${i}]=${arr[i]} onto stack`);
+  monoRenderCells(i);monoState.cur++;
+}
+function monoFinish(){
+  monoState.running=false;
+  // Remaining elements in stack have no NGE
+  while(monoState.stk.length){const j=monoState.stk.pop();monoState.nge[j]=-1;}
+  monoRenderCells(-1);
+  logAdd('mono-log','✨ Done. Remaining stack elements have no NGE (→ ∞)','found-msg');
+}
+function monoAuto(){
+  monoInit();monoState.running=true;
+  const delay=spd('mono-speed');
+  const run=()=>{if(!monoState.running)return;if(monoState.cur>=monoState.arr.length){monoFinish();return;}monoStep();monoState.timer=setTimeout(run,delay);};run();
+}
+
+// ══════ MIN HEAP ══════════════════════════════════════════════
+let heap=[];
+const HC=document.getElementById('heap-canvas');
+const HX=HC.getContext('2d');
+
+function hpResize(){
+  const wrap=document.getElementById('heap-wrap');
+  HC.width=wrap.clientWidth||700;HC.height=260;
+}
+function hpReset(){heap=[];hpResize();hpDraw();document.getElementById('hp-min').textContent='—';document.getElementById('hp-size').textContent=0;logClear('hp-log');}
+function hpSwap(a,b){[heap[a],heap[b]]=[heap[b],heap[a]];}
+function hpUp(i){while(i>0){const p=(i-1)>>1;if(heap[p]<=heap[i])break;hpSwap(p,i);i=p;}}
+function hpDown(i){const n=heap.length;while(true){let m=i;const l=2*i+1,r=2*i+2;if(l<n&&heap[l]<heap[m])m=l;if(r<n&&heap[r]<heap[m])m=r;if(m===i)break;hpSwap(i,m);i=m;}}
+function hpInsert(){
+  const v=parseInt(document.getElementById('hp-val').value);if(isNaN(v))return;
+  heap.push(v);hpUp(heap.length-1);hpDraw();
+  document.getElementById('hp-min').textContent=heap[0];document.getElementById('hp-size').textContent=heap.length;
+  logAdd('hp-log',`⬆ Insert(${v}) → size ${heap.length}, min=${heap[0]}`,'highlight');
+}
+function hpExtract(){
+  if(!heap.length){logAdd('hp-log','⚠ Heap empty!','warn');return;}
+  const min=heap[0];
+  if(heap.length===1)heap=[];else{heap[0]=heap.pop();hpDown(0);}
+  hpDraw();document.getElementById('hp-min').textContent=heap.length?heap[0]:'—';document.getElementById('hp-size').textContent=heap.length;
+  logAdd('hp-log',`⬇ ExtractMin() → ${min}  new min=${heap.length?heap[0]:'—'}`,'found-msg');
+}
+function hpBuild(){
+  const arr=document.getElementById('hp-build-arr').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  heap=[];arr.forEach(v=>{heap.push(v);hpUp(heap.length-1);});
+  hpResize();hpDraw();document.getElementById('hp-min').textContent=heap.length?heap[0]:'—';document.getElementById('hp-size').textContent=heap.length;
+  logAdd('hp-log',`🔨 Built heap from [${arr.join(',')}] — min=${heap[0]}`,'highlight');
+}
+function hpDraw(){
+  hpResize();
+  const W=HC.width,H=HC.height;
+  HX.clearRect(0,0,W,H);
+  if(!heap.length)return;
+  const n=heap.length;
+  function pos(i){
+    const lv=Math.floor(Math.log2(i+1));
+    const posInLv=i-(Math.pow(2,lv)-1);
+    const countInLv=Math.pow(2,lv);
+    const x=W*(posInLv+0.5)/countInLv;
+    const y=36+lv*Math.min(56,Math.floor((H-36)/Math.max(1,Math.floor(Math.log2(n+1)))));
+    return{x,y};
+  }
+  for(let i=1;i<n;i++){const p=(i-1)>>1;const{x:x1,y:y1}=pos(i);const{x:x2,y:y2}=pos(p);HX.beginPath();HX.moveTo(x2,y2);HX.lineTo(x1,y1);HX.strokeStyle='rgba(34,34,74,1)';HX.lineWidth=2;HX.stroke();}
+  for(let i=0;i<n;i++){
+    const{x,y}=pos(i);const r=Math.min(22,Math.floor(W/Math.pow(2,Math.floor(Math.log2(n+1)))*0.4));
+    HX.beginPath();HX.arc(x,y,r,0,Math.PI*2);
+    if(i===0){HX.fillStyle='rgba(245,158,11,0.25)';HX.strokeStyle='#f59e0b';}
+    else{HX.fillStyle='rgba(139,92,246,0.12)';HX.strokeStyle='rgba(139,92,246,0.5)';}
+    HX.lineWidth=2;HX.fill();HX.stroke();
+    HX.fillStyle=i===0?'#f0c96e':'#c084fc';
+    HX.font=`bold ${Math.max(11,r-4)}px 'Cinzel',serif`;HX.textAlign='center';HX.textBaseline='middle';
+    HX.fillText(heap[i],x,y);
+  }
+}
+
+// ══════ MAP / SET ════════════════════════════════════════════
+let mapStore=new Map();
+function mapRender(){
+  const disp=document.getElementById('map-display');
+  disp.innerHTML=[...mapStore.entries()].map(([k,v])=>`<div class="map-entry"><span style="color:var(--amber);">${k}</span><span style="color:var(--text-dim);"> → </span><span style="color:var(--text);">${v}</span></div>`).join('');
+  document.getElementById('map-size').textContent=mapStore.size;
+}
+function mapSet(){const k=document.getElementById('map-key').value.trim(),v=document.getElementById('map-val').value.trim();if(!k)return;mapStore.set(k,v);mapRender();logAdd('map-log',`Set("${k}", "${v}")`,'highlight');}
+function mapGet(){const k=document.getElementById('map-key').value.trim();if(mapStore.has(k)){document.getElementById('map-result-msg').innerHTML=`<span style="font-family:'Cinzel',serif;font-size:14px;color:var(--green);">Get("${k}") = "${mapStore.get(k)}"</span>`;logAdd('map-log',`Get("${k}") → "${mapStore.get(k)}"`,'found-msg');}else logAdd('map-log',`Get("${k}") → undefined`,'warn');}
+function mapDelete(){const k=document.getElementById('map-key').value.trim();if(mapStore.delete(k)){mapRender();logAdd('map-log',`Delete("${k}")`,'warn');}else logAdd('map-log',`"${k}" not found`,'warn');}
+function mapClear(){mapStore.clear();mapRender();logClear('map-log');}
+function mapFreqDemo(){
+  const arr=document.getElementById('map-demo-arr').value.split(',').map(s=>s.trim()).filter(Boolean);
+  mapStore.clear();arr.forEach(v=>mapStore.set(v,(mapStore.get(v)||0)+1));
+  mapRender();logAdd('map-log',`Frequency count of [${arr.join(',')}]`,'highlight');
+  logAdd('map-log',[...mapStore.entries()].map(([k,v])=>`${k}:${v}`).join(' | '),'found-msg');
+}
+
+// init
+window.addEventListener('load',()=>{
+  stkRender();qRender();dqRender();hpResize();hpDraw();mapRender();
+  setTimeout(()=>stkDemo(),500);
+});
+</script>
+</body>
+</html>
