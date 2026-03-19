@@ -1345,27 +1345,74 @@
     let dfsSteps = [], dfsSI = 0, dfsDone = false, dfsPaused = false;
     function genDFS(G, start) {
       const steps = [], n = G.nodes.length; if (!n || !G.nodes[start]) return steps;
-      const adj = buildAdj(n, G.edges, false), vis = new Set([start]), order = [];
-      let ns = { [start]: 'start' }, es = {};
-      const stk = [start], stkArr = [start]; let maxD = 0;
-      steps.push({ ns: { ...ns }, es: { ...es }, stk: [...stkArr], ord: '', depth: 1, log: 'DFS from node ' + start, lc: 'highlight' });
-      while (stk.length) {
-        const u = stk.pop(); stkArr.pop(); order.push(u);
-        ns = { ...ns, [u]: 'current' };
-        steps.push({ ns: { ...ns }, es: { ...es }, stk: [...stkArr], ord: order.join('→'), depth: stkArr.length, log: 'Visit node ' + u, lc: '' });
-        const nbrs = adj[u].slice().reverse();
-        for (const { v } of nbrs) {
-          if (!vis.has(v)) {
-            vis.add(v); stk.push(v); stkArr.push(v);
-            ns = { ...ns, [v]: 'stack' }; const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'active' };
-            if (stkArr.length > maxD) maxD = stkArr.length;
-            steps.push({ ns: { ...ns }, es: { ...es }, stk: [...stkArr], ord: order.join('→'), depth: maxD, log: 'Push ' + v, lc: '' });
+      const adj = buildAdj(n, G.edges, false);
+      const vis = new Set(), order = [];
+      let ns = {}, es = {}, maxDepth = 0;
+
+      steps.push({ ns: { ...ns }, es: { ...es }, stk: [], ord: '—', depth: 0, log: 'DFS from node ' + start, lc: 'highlight' });
+
+      // Proper recursive DFS simulation using explicit call frames.
+      // Each frame = {node, ni} where ni = index of next neighbor to explore.
+      // At any time, frames[] is EXACTLY the path from root to current node —
+      // just like the real call stack of a recursive DFS.
+      function dfsComponent(startNode) {
+        if (vis.has(startNode)) return;
+        vis.add(startNode);
+        order.push(startNode);
+        const frames = [{ node: startNode, ni: 0 }];
+        ns = { ...ns, [startNode]: 'start' };
+        maxDepth = Math.max(maxDepth, 1);
+        steps.push({ ns: { ...ns }, es: { ...es }, stk: frames.map(f => f.node), ord: order.join('→'), depth: maxDepth, log: 'Enter node ' + startNode, lc: 'highlight' });
+
+        while (frames.length > 0) {
+          const frame = frames[frames.length - 1];
+          const u = frame.node;
+          const nbrs = adj[u];
+          let advanced = false;
+
+          // Look for the next unvisited neighbor of u
+          while (frame.ni < nbrs.length) {
+            const v = nbrs[frame.ni].v;
+            frame.ni++;
+            if (!vis.has(v)) {
+              // Tree edge: recurse deeper into v
+              vis.add(v);
+              order.push(v);
+              frames.push({ node: v, ni: 0 });
+              const ek = Math.min(u, v) + '-' + Math.max(u, v);
+              es = { ...es, [ek]: 'active' };
+              // u is now waiting (on stack), v is the active node
+              ns = { ...ns, [u]: 'stack', [v]: 'current' };
+              maxDepth = Math.max(maxDepth, frames.length);
+              steps.push({ ns: { ...ns }, es: { ...es }, stk: frames.map(f => f.node), ord: order.join('→'), depth: maxDepth, log: u + ' → ' + v + '  (depth ' + frames.length + ')', lc: '' });
+              advanced = true;
+              break;
+            }
+          }
+
+          if (!advanced) {
+            // All neighbors of u explored — backtrack (return from this call frame)
+            frames.pop();
+            ns = { ...ns, [u]: 'visited' };
+            if (frames.length > 0) {
+              const parent = frames[frames.length - 1].node;
+              const ek = Math.min(u, parent) + '-' + Math.max(u, parent);
+              es = { ...es, [ek]: 'path' };
+              // Parent resumes as current node
+              ns = { ...ns, [parent]: 'current' };
+              steps.push({ ns: { ...ns }, es: { ...es }, stk: frames.map(f => f.node), ord: order.join('→'), depth: maxDepth, log: 'Backtrack  ' + u + ' → ' + parent, lc: '' });
+            } else {
+              steps.push({ ns: { ...ns }, es: { ...es }, stk: [], ord: order.join('→'), depth: maxDepth, log: 'Finish ' + u + '  (root done)', lc: '' });
+            }
           }
         }
-        ns = { ...ns, [u]: 'visited' };
-        steps.push({ ns: { ...ns }, es: { ...es }, stk: [...stkArr], ord: order.join('→'), depth: maxD, log: 'Finished ' + u, lc: '' });
       }
-      steps.push({ ...steps[steps.length - 1], stk: [], log: '✨ DFS complete! Order: ' + order.join('→'), lc: 'found-msg', done: true });
+
+      dfsComponent(start);
+      // Handle any disconnected nodes
+      for (let i = 0; i < n; i++) { if (!vis.has(i)) dfsComponent(i); }
+
+      steps.push({ ...steps[steps.length - 1], stk: [], log: '✨ DFS complete!  Order: ' + order.join('→'), lc: 'found-msg', done: true });
       return steps;
     }
     function runDFS() {
@@ -1394,28 +1441,51 @@
     function genDijk(G, src) {
       const steps = [], n = G.nodes.length; if (!n || !G.nodes[src]) return steps;
       const adj = buildAdj(n, G.edges, false);
-      const dist = new Array(n).fill(1e9), via = new Array(n).fill(-1); const settled = new Set();
-      dist[src] = 0; const pq = [[0, src]]; let ns = { [src]: 'queue' }, es = {}, relaxed = 0;
-      G.nodes.forEach(nd => { nd.distLabel = nd.id === src ? 0 : undefined; });
-      steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(), curr: src, relax: 0, log: 'Dijkstra from node ' + src + ': dist[' + src + ']=0', lc: 'highlight' });
+      const dist = new Array(n).fill(1e9), via = new Array(n).fill(-1);
+      const settled = new Set();
+      dist[src] = 0;
+      // Min-heap simulated as sorted array.  pq entries: [dist, node]
+      const pq = [[0, src]];
+      let ns = { [src]: 'queue' }, es = {}, relaxed = 0;
+
+      steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(), curr: src, relax: 0, log: 'Start Dijkstra from ' + src + '  dist[' + src + ']=0', lc: 'highlight' });
+
       while (pq.length) {
-        pq.sort((a, b) => a[0] - b[0]); const [d, u] = pq.shift();
-        if (settled.has(u) || d > dist[u]) continue;
-        settled.add(u); ns = { ...ns, [u]: 'current' };
-        steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Settle node ' + u + ' (dist=' + dist[u] + ')', lc: '' });
+        pq.sort((a, b) => a[0] - b[0]);
+        const [d, u] = pq.shift();
+
+        // Stale entry — this node was already settled with a shorter path.
+        // Generate a visible step so the animation keeps moving.
+        if (settled.has(u) || d > dist[u]) {
+          ns = { ...ns }; // no state change, just show a step
+          steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Skip stale entry  node ' + u + '  (d=' + d + ' > best=' + dist[u] + ')', lc: '' });
+          continue;
+        }
+
+        settled.add(u);
+        ns = { ...ns, [u]: 'current' };
+        steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Processing node ' + u + '  dist=' + dist[u], lc: '' });
+
         for (const { v, w } of adj[u]) {
-          if (!settled.has(v) && dist[u] + w < dist[v]) {
-            dist[v] = dist[u] + w; via[v] = u; pq.push([dist[v], v]); relaxed++;
-            ns = { ...ns, [v]: 'queue' }; const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'active' };
-            steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Relax: dist[' + v + ']=' + dist[v] + ' via ' + u, lc: 'highlight' });
+          if (settled.has(v)) continue;
+          if (dist[u] + w < dist[v]) {
+            dist[v] = dist[u] + w; via[v] = u;
+            pq.push([dist[v], v]); relaxed++;
+            ns = { ...ns, [v]: 'queue' };
+            const ek = Math.min(u, v) + '-' + Math.max(u, v); es = { ...es, [ek]: 'active' };
+            steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: '  Relax  ' + u + '→' + v + '  new dist[' + v + ']=' + dist[v], lc: 'highlight' });
           }
         }
+
+        // Settle u: freeze its colour and mark outgoing tree-edges
         ns = { ...ns, [u]: 'settled' };
-        const es2 = { ...es }; for (const { v } of adj[u]) { const ek = Math.min(u, v) + '-' + Math.max(u, v); if (es2[ek] === 'active') es2[ek] = 'settled'; }
+        const es2 = { ...es };
+        for (const { v } of adj[u]) { const ek = Math.min(u, v) + '-' + Math.max(u, v); if (es2[ek] === 'active') es2[ek] = 'settled'; }
         es = es2;
-        steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Node ' + u + ' settled!', lc: '' });
+        steps.push({ ns: { ...ns }, es: { ...es }, dist: [...dist], via: [...via], settled: new Set(settled), curr: u, relax: relaxed, log: 'Settled node ' + u + '  ✓  final dist=' + dist[u], lc: '' });
       }
-      steps.push({ ...steps[steps.length - 1], log: '✨ Done! All ' + settled.size + ' nodes settled.', lc: 'found-msg', done: true });
+
+      steps.push({ ...steps[steps.length - 1], log: '✨ Dijkstra done!  ' + settled.size + '/' + n + ' nodes settled', lc: 'found-msg', done: true });
       return steps;
     }
     function updDijkTable(dist, via, settled, curr, n) {
